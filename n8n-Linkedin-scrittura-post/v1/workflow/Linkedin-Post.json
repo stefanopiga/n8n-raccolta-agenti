@@ -1,0 +1,579 @@
+{
+  "name": "Linkedin-Post",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "YOUR_NOTION_DATABASE_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_NOTION_DATABASE_ID",
+          "cachedResultUrl": "https://www.notion.so/YOUR_NOTION_DATABASE_ID"
+        },
+        "title": "database-Linkedin",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Title|title",
+              "title": "={{ $json.title }}"
+            },
+            {
+              "key": "Post body|rich_text",
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "text": "={{ $json.post_body }}",
+                    "annotationUi": {}
+                  }
+                ]
+              }
+            },
+            {
+              "key": "URL|url",
+              "urlValue": "={{ $('HTTP JINA').item.json.data.url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c9b7b495-285e-4f32-901e-fc7f41cd9499",
+      "name": "Save to Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [3760, 0],
+      "notesInFlow": true,
+      "credentials": {
+        "notionApi": {
+          "id": "YOUR_NOTION_CREDENTIAL_ID",
+          "name": "Notion account 2"
+        }
+      },
+      "notes": "Configura il Database ID"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "hour": 5
+            }
+          ]
+        },
+        "feedUrl": "http://export.arxiv.org/rss/cs.AI"
+      },
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "typeVersion": 1,
+      "position": [192, -128],
+      "id": "0ccaf783-9cdb-4d7c-ac90-801e661e753e",
+      "name": "RSS Feed Trigger(ArXiv CS.AI)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c2e2e90b-b79d-48f5-9a32-3189c081ad50",
+              "name": "inputUrl",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [624, 0],
+      "id": "9abdc135-d603-406d-a6e6-b2ac14b030f9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// clean-llm-output-v6-SPACER-ENFORCER.js\nlet rawContent = $input.item.json.output || $input.item.json.text || \"\";\nlet jinaMetadata = $node[\"HTTP JINA\"].json.data || {}; \n\nif (!rawContent) return { title: \"Errore\", post_body: \"Dati mancanti\", status: \"error\" };\n\n// 1. Pulizia preliminare JSON\nlet cleanString = rawContent.replace(/```json|```/g, \"\").trim();\n\ntry {\n    const parsedData = JSON.parse(cleanString);\n    let finalPost = \"\";\n\n    if (typeof parsedData.linkedin_post === 'object') {\n        const p = parsedData.linkedin_post;\n        \n        // Recupero campi grezzi\n        let hook = p.Hook || \"\";\n        let corpoRaw = p.Corpo; \n        let closing = p.Closing || \"\";\n        let hashtags = p.Hashtag || \"\";\n\n        // 2. Logica di estrazione del corpo (Array o Stringa)\n        let corpoString = \"\";\n        if (Array.isArray(corpoRaw)) {\n            corpoString = corpoRaw.join(\"\\n\\n\");\n        } else {\n            corpoString = corpoRaw || \"\";\n        }\n\n        // 3. Assemblaggio preliminare\n        // Uniamo tutto con un separatore provvisorio\n        finalPost = `${hook}\\n\\n${corpoString}\\n\\n${closing}\\n\\n${hashtags}`;\n\n    } else {\n        finalPost = parsedData.linkedin_post || cleanString;\n    }\n\n    // ============================================================\n    // 4. THE SPACER ENFORCER (Fix per Notion Visual Breathing)\n    // Questa sezione forza la spaziatura indipendentemente dal JSON\n    // ============================================================\n\n    // A. Rimuove Markdown residuo (* o **)\n    finalPost = finalPost.replace(/\\*\\*/g, \"\").replace(/\\*/g, \"\");\n\n    // B. Normalizza gli a capo multipli in eccesso (evita buchi enormi)\n    finalPost = finalPost.replace(/\\n{3,}/g, \"\\n\\n\");\n\n    // C. FORZA SPAZIO PRIMA DELLE LAMPADINE (💡)\n    // Cerca qualsiasi combinazione di newline prima di una lampadina e la forza a essere \\n\\n\n    finalPost = finalPost.replace(/(\\n\\s*)+💡/g, \"\\n\\n💡\");\n\n    // D. FORZA SPAZIO PRIMA DELLA DOMANDA FINALE\n    // Cerca la domanda (spesso inizia con \"Domanda\" o \"?\")\n    finalPost = finalPost.replace(/(\\n\\s*)+(Domanda|Closing|Voi cosa ne pensate)/g, \"\\n\\n$2\");\n\n    // E. FORZA SPAZIO PRIMA DEGLI HASHTAG\n    finalPost = finalPost.replace(/(\\n\\s*)+#/g, \"\\n\\n#\");\n\n    // 5. Protezione lunghezza Notion\n    if (finalPost.length > 2000) {\n        finalPost = finalPost.substring(0, 1997) + \"...\";\n    }\n\n    return {\n        title: parsedData.title || \"Post Tecnico\",\n        post_body: finalPost, \n        image_url: jinaMetadata.image || \"\", \n        status: \"success\"\n    };\n\n} catch (e) {\n    return {\n        title: \"⚠️ REVISIONE RICHIESTA\",\n        post_body: rawContent.substring(0, 1997),\n        status: \"manual_check\",\n        debug: e.message\n    };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3328, 0],
+      "id": "d151a15e-6fa8-437a-aa3f-aab19ab85693",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "hour": 5
+            }
+          ]
+        },
+        "feedUrl": "https://news.google.com/rss/search?q=LLM+Agents+OR+RAG+Architecture+when:1d&hl=en-US&gl=US&ceid=US:en"
+      },
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "typeVersion": 1,
+      "position": [192, 128],
+      "id": "749f710a-0aa7-4e78-b7a5-c85c7073fdf7",
+      "name": "RSS Feed Trigger(Google news)"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [2832, 256],
+      "id": "47f07e2b-404e-498b-816c-620684d75719",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2-pro-2025-12-11",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2-pro-2025-12-11"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [2192, 256],
+      "id": "9436d678-3a0e-435d-86c1-8e3d6f335e37",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=### ROLE & DNA (Stefano Borgato)\nSei Stefano Borgato, AI Engineer specializzato in Context Engineering. Il tuo mantra è: \"L'AI non ha bisogno di prompt migliori, ha bisogno di Architettura\". \nScrivi con un tono asciutto, pragmatico e \"Code-First\", come se avessi appena finito una sessione di debugging: niente \"fuffa\", solo sostanza tecnica.\n\n### MISSION\nAnalizza la fonte tecnica (Input) e trasformala in un post LinkedIn che agisca come un \"Manifesto Tecnico\".\n\n### ARCHITETTURA DEL POST (Struttura 1-3-1)\n1. **Hook**: Una sfida di produzione o una critica secca all'approccio standard (es: \"X non è un problema di prompt, è un problema di stato\").\n2. **Corpo (Template B)**: Claim manifesto -> Contesto con dati chiave -> 💡 3 Takeaway numerati che includano esplicitamente un failure mode e un guardrail.\n3. **Closing**: Una domanda tecnica specifica per Solution Architect (scalabilità, testing, osservabilità) per stimolare il dibattito tra pari.\n\n### GOLD EXAMPLES (Segui questa cadenza)\n- \"L'AI non ha bisogno di prompt migliori. Ha bisogno di Architettura. Stiamo vivendo il passaggio dal Prompt Engineering al Context Engineering.\"\n- \"L'Anello Mancante: Ingegnerizzare gli Agenti. Abbiamo i dati, abbiamo il DB. Ora manca il direttore d'orchestra.\"\n\n### VINCOLI TECNICI\n- **Vocabolario**: Mantieni rigorosamente in inglese i termini: Context Engineering, RAG, Vector Store, Type Safety, Dependency Injection, Production-Ready, Pipeline, Workflow.\n- **Lunghezza**: Massimo 1800 caratteri totali.\n- **Formato**: Restituisci esclusivamente un oggetto JSON con questa struttura:\n{\n  \"title\": \"Titolo secco\",\n  \"linkedin_post\": {\n    \"Hook\": \"Stringa\",\n    \"Corpo\": [\"💡 Takeaway 1\", \"💡 Takeaway 2\", \"💡 Takeaway 3\"],\n    \"Closing\": \"Stringa\",\n    \"Hashtag\": \"#AIengineering #SoftwareArchitecture #SystemDesign\"\n  }\n}\n\n### INPUT DATA (Fonte Jina)\n{{ $node[\"HTTP JINA\"].json.data.content }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [2320, 0],
+      "id": "6476f770-a73a-44f5-861b-abbf6ef33e4a",
+      "name": "AI Agent WRITER"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=### ROLE\nSei Stefano Borgato in veste di Senior Solution Architect e Technical Editor. Il tuo compito è validare, correggere e rifinire i post tecnici del tuo Junior AI Engineer, garantendo che ogni parola rispetti il tuo \"Gold Standard Style Manual\".\n\n### MISSION\nAnalizza la bozza (Input 1), confrontala con la fonte tecnica (Input 2) e arricchiscila con il sentiment della community (Input 3). Elimina ogni allucinazione e rendi il post \"Senior-Level\", citando sfide o casi d'uso reali emersi online.\n\n### REVISION TASKS (STEFANO'S DNA)\n1. **Fact-Checking (Fonte Jina)**: Verifica che i dati siano accurati rispetto alla fonte (Input 2). Rimuovi concetti non supportati.\n\n2. **Authority Injection (Social Proof)**: Integra i dati di Tavily (Input 3). Cita discussioni reali (es. \"Mentre su Reddit si discute della complessità di X...\") per dimostrare competenza \"sul campo\".\n\n3. **PascalCase Enforcer (CRITICO - DO NOT FAIL)**:\n   - Identifica i 2-3 concetti tecnici o architetturali cardine del post (es. pipeline, context, guardrail).\n   - Trasformali TASSATIVAMENTE in PascalCase unito (es: \"AlignmentPipeline\", \"ContextEngineering\", \"ProductionReady\", \"TypeSafety\").\n   - Tutto il resto rimane in minuscolo/standard o tra virgolette (\" \").\n\n4. **Formatting Constraints (NO MARKDOWN)**: \n   - **VIETATO usare asterischi (*)** o grassetti (**). Il testo deve essere \"Flat Text\" puro.\n   - Sbagliato: \"💡 1) **ContextEngineering** è chiave...\"\n   - Corretto: \"💡 1) ContextEngineering è chiave...\"\n   - Sbagliato: \"**Guardrail**:\"\n   - Corretto: \"Guardrail:\"\n\n5. **Tone & Syntax**: \n   - Stile \"Code-First\": asciutto, pragmatico, niente aggettivi riempitivi.\n   - Usa i due punti (:) per introdurre spiegazioni tecniche.\n   - Elimina termini HYPE: \"incredibile\", \"rivoluzionario\", \"fondamentale\". Sostituisci con metriche o stati (es. \"deterministico\", \"osservabile\").\n\n6. **Controllo Lunghezza**: Il post finale DEVE essere inferiore a 1800 caratteri.\n\n### INPUT DATA\n- **Bozza da revisionare**: {{ JSON.stringify($('AI Agent WRITER').item.json.output) }}\n- **Fonte originale (Markdown)**: {{ $(\"HTTP JINA\").item.json.data.content }}\n- **Social Proof (Sentiment)**: {{ $(\"HTTP TAVILY\").item.json.answer }}\n\n### OUTPUT STRUCTURE (JSON ONLY)\nRestituisci esclusivamente un oggetto JSON valido (senza blocchi di codice ```json):\n{\n  \"title\": \"Titolo secco e ingegneristico\",\n  \"linkedin_post\": {\n    \"Hook\": \"Frase d'impatto con aggancio tecnico o social (senza markdown)\",\n    \"Corpo\": [\n      \"💡 1) Claim tecnico. Failure mode. Guardrail.\", \n      \"💡 2) Claim tecnico. Failure mode. Guardrail.\", \n      \"💡 3) Claim tecnico. Failure mode. Guardrail.\"\n    ],\n    \"Closing\": \"Domanda tecnica specifica per Architect\",\n    \"Hashtag\": \"#AIengineering #SoftwareArchitecture #SystemDesign\"\n  }\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [2896, 0],
+      "id": "f6dfefdb-4c58-4c4f-a0d0-a96642ebca25",
+      "name": "AI Agent REVIEWER"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=### ROLE\nSei il Technical Gatekeeper di Stefano Borgato, AI Engineer specializzato in Context Engineering e Orchestrazione. Il tuo compito è filtrare i contenuti in ingresso (estratti dal nodo Edit Fields) per decidere se meritano un'analisi tecnica approfondita per un post su LinkedIn.\n\n### MISSION\nAnalizza il titolo e lo snippet forniti e determina se il contenuto è \"Production-Ready\" e architettonicamente rilevante secondo il mantra: \"L'AI non ha bisogno di prompt migliori, ha bisogno di Architettura\".\n\n### INPUT DATA\n- Titolo: {{ $('Edit Fields').item.json.title }}\n- Snippet/Abstract: {{ $('Edit Fields').item.json.content }}\n\n### CLASSIFICATION CRITERIA\nMantieni (keep: true) solo se il tema riguarda:\n- Agentic Workflows e Orchestrazione (n8n, LangGraph, PydanticAI, CrewAI, etc.).\n- Ingegneria del Contesto (Context Engineering), RAG avanzato, GraphRAG o gestione dei Metadata.\n- System Design per LLM e validazione degli output (Validation Loops, Type Safety, Structured Output).\n- Ricerca tecnica pura (ArXiv) che impatta direttamente la scalabilità o l'affidabilità dei sistemi AI in produzione.\n\nScarta (keep: false) se:\n- È una notizia puramente commerciale, finanziaria o di business (es. \"L'azienda X ha raccolto fondi\").\n- È un tutorial base per principianti (es. \"Come scrivere il tuo primo prompt\").\n- È puro hype di marketing senza alcun dettaglio su implementazione, architettura o trade-off tecnici.\n\n### OUTPUT STRUCTURE (JSON ONLY)\nRispondi esclusivamente con questo oggetto JSON, senza testo aggiuntivo:\n{\n  \"keep\": boolean,\n  \"reason\": \"Spiegazione tecnica brevissima (max 10 parole)\",\n  \"confidence\": 0-1\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [1504, 0],
+      "id": "96bdfb65-3f5d-4338-ae6b-565ed43edfc5",
+      "name": "AI Agent CLASSIFIER"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [1440, 224],
+      "id": "c8aac30d-1ac7-4965-9894-df4546825620",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"keep\": {\n      \"type\": \"boolean\",\n      \"description\": \"True se il contenuto è tecnicamente rilevante, False se è hype o commerciale.\"\n    },\n    \"reason\": {\n      \"type\": \"string\",\n      \"description\": \"Breve spiegazione del perché il contenuto è stato accettato o scartato.\"\n    },\n    \"confidence\": {\n      \"type\": \"number\",\n      \"description\": \"Grado di certezza della classificazione (0-1).\"\n    }\n  },\n  \"required\": [\"keep\", \"reason\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [1696, 224],
+      "id": "6cc9cfc4-431c-41fa-a71a-6e0da3f739fb",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🚀 **Architettura Post Pronta su Notion**\n\n📌 **Titolo:** {{ $node[\"Code in JavaScript\"].json.title }}\n🤖 **Confidence Score:** {{ Math.round($node[\"AI Agent CLASSIFIER\"].json.output.confidence * 100) }}%\n🛠️ **Reasoning:** {{ $node[\"AI Agent CLASSIFIER\"].json.output.reason }}\n\n🔗 **Revisiona e Pubblica:** https://www.notion.so/{{ $node[\"Save to Notion\"].json.id.replace(/-/g, \"\") }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [3968, 0],
+      "id": "b579d4c3-b2b2-4344-b1b6-0a7c5796e285",
+      "name": "Send a text message",
+      "webhookId": "YOUR_TELEGRAM_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "YOUR_NOTION_DATABASE_ID",
+          "mode": "list",
+          "cachedResultName": "database-Linkedin",
+          "cachedResultUrl": "https://www.notion.so/YOUR_NOTION_DATABASE_ID"
+        },
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "URL|url",
+              "condition": "equals",
+              "urlValue": "={{ $json.link }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [880, 0],
+      "id": "b51b2a17-e26d-48cf-a64b-7d7996517bd7",
+      "name": "Notion Search",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "YOUR_NOTION_CREDENTIAL_ID",
+          "name": "Notion account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "36cf5174-3357-4373-a458-c15d5fbb90ee",
+              "leftValue": "={{ Object.keys($json).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [1168, 0],
+      "id": "53e74491-a9d7-499e-b25b-e30e675d1598",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2075f76d-9dd4-45b3-af3b-84ff02b6709c",
+              "leftValue": "={{ $json.output.keep }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [1872, 0],
+      "id": "094d50f6-d403-494d-9a60-c89fffe7838b",
+      "name": "Filter2"
+    },
+    {
+      "parameters": {
+        "url": "=https://r.jina.ai/{{ $node[\"Edit Fields\"].json.inputUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [2112, 0],
+      "id": "1194bbe5-2de8-42d9-9b9c-c18a9c5a1638",
+      "name": "HTTP JINA"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"api_key\": \"YOUR_TAVILY_API_KEY\",\n  \"query\": {{ JSON.stringify(\"site:reddit.com OR site:x.com \" + $(\"Edit Fields\").item.json.title) }},\n  \"search_depth\": \"advanced\",\n  \"include_answer\": true,\n  \"max_results\": 3\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": \"YOUR_TAVILY_API_KEY\",\n  \"query\": {{ JSON.stringify(\"site:reddit.com OR site:x.com \" + $(\"Edit Fields\").item.json.title) }},\n  \"search_depth\": \"advanced\",\n  \"include_answer\": true,\n  \"max_results\": 3\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [2672, 0],
+      "id": "d5913659-ae03-4335-b31c-f86d0e1e1d8e",
+      "name": "HTTP TAVILY"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "RSS Feed Trigger(ArXiv CS.AI)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Notion Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Save to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feed Trigger(Google news)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent REVIEWER",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent WRITER",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent WRITER": {
+      "main": [
+        [
+          {
+            "node": "HTTP TAVILY",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent REVIEWER": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent CLASSIFIER": {
+      "main": [
+        [
+          {
+            "node": "Filter2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent CLASSIFIER",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent CLASSIFIER",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Notion": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion Search": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent CLASSIFIER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter2": {
+      "main": [
+        [
+          {
+            "node": "HTTP JINA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP JINA": {
+      "main": [
+        [
+          {
+            "node": "AI Agent WRITER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP TAVILY": {
+      "main": [
+        [
+          {
+            "node": "AI Agent REVIEWER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": ""
+  },
+  "id": "",
+  "tags": []
+}

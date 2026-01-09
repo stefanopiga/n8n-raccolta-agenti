@@ -1,0 +1,391 @@
+{
+  "name": "N8N-agent-e-commerce",
+  "nodes": [
+    {
+      "parameters": {
+        "notice": "Click to start the wine description generation workflow"
+      },
+      "id": "1f50d467-448e-4ad9-9d87-6fbd4af5f834",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-2240, 656]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "inputSheetName",
+              "value": "Prodotti da definire",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "templateSheetName",
+              "value": "template_descrizione",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "outputFolderName",
+              "value": "={{ 'Wine_Descriptions_' + $now.format('yyyy-MM-dd_HHmmss') }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "perplexityModel",
+              "value": "sonar-pro",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "08451bef-849e-43ec-a518-94dc242434f8",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-2016, 656]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Workflow Configuration').item.json.outputFolderName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "id": "7634c576-4d27-4b61-b395-fc420b3cad39",
+      "name": "Create Output Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [-1792, 656],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "cantina",
+              "value": "={{ $json.domain }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "nome_vino",
+              "value": "={{ $json.nome_vino }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "annata",
+              "value": "={{ $json.anno }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "categoria",
+              "value": "={{ $json.litraggio }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "searchQuery",
+              "value": "={{ 'Esegui una ricerca approfondita sullo Champagne ' + $json.domain + ' ' + $json.nome_vino + ' ' + $json.anno + '. Trova: 1) Storia della cantina e filosofia (es. biodinamica, lieviti indigeni). 2) Caratteristiche tecniche: vitigni, affinamento sui lieviti, dosaggio e uso di solfiti. 3) Note degustative: colore, bouquet (profumi) e sensazioni al palato. 4) 5 abbinamenti gastronomici precisi. 5) 5 occasioni sociali o momenti ideali per berlo.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d5cc0a07-2a4b-452d-9679-089e5cb2203f",
+      "name": "Prepare Perplexity Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-496, 528]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "perplexityApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sonar-pro\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.searchQuery }}\"\n    }\n  ],\n  \"temperature\": 0.2,\n  \"return_citations\": true\n}",
+        "options": {}
+      },
+      "id": "dcb589ba-7007-48d3-aca5-60e5f6f8a8a1",
+      "name": "Call Perplexity API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-272, 528],
+      "credentials": {
+        "perplexityApi": {
+          "id": "YOUR_PERPLEXITY_CREDENTIAL_ID",
+          "name": "Perplexity account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_DRIVE_FILE_ID",
+          "mode": "list",
+          "cachedResultName": "Lista_vini.json",
+          "cachedResultUrl": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [-1584, 656],
+      "id": "4cc1e066-66c6-4f14-ae16-f11a3fd99728",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [-1232, 656],
+      "id": "141ed0d2-9377-4c38-9586-a7d663bd366c",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const vini = $json.data;\n\n// Restituisci ogni vino come item separato\nreturn vini.map(vino => ({ json: vino }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-848, 608],
+      "id": "954a498c-aaa8-409b-89f0-f3fd1cbe8ab4",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=Sei un sommelier esperto e un copywriter di lusso. Il tuo compito è generare una descrizione tecnica ed emozionale seguendo RIGOROSAMENTE la struttura HTML del template fornito. Restituisci SOLO il contenuto HTML partendo da <h2>.\n\nSTRUTTURA DA CLONARE (RISPETTA L'ORDINE):\n1. Titolo: <h2>[Nome Cantina] - [Nome Vino] [Anno]</h2>\n\n2. Introduzione: <p><strong>[Nome Vino]</strong> nasce da... [Descrivi vitigno, lieu-dit e filosofia produttiva]</p>\n\n3. Tecnica: <p>[Dettagli fermentazione, uso del legno, permanenza sui lieviti e gestione dei solfiti]</p>\n\n4. Esame Organolettico: 4 paragrafi <p> distinti che iniziano con: (Vista), (Bouquet), (Palato), (Equilibrio e Potenziale di invecchiamento).</p>\n\n5. Sintesi: <p>[Paragrafo che riassume l'identità territoriale e l'eleganza del prodotto].</p>\n\n6. Sezioni Liste: \n   <h3>🎁 IDEALE PER:</h3>\n   [Genera 5 punti elenco nel formato indicato al punto 8]\n   \n   <h3>🎁 ABBINAMENTI GASTRONOMICI:</h3>\n   [Genera 5 punti elenco nel formato indicato al punto 8]\n\n7. FRASE EVOCATIVA (CHIUSURA OBBLIGATORIA): \n   Deve essere l'ULTIMO paragrafo del documento, posizionato dopo l'ultimo punto elenco degli abbinamenti.\n   Deve essere un paragrafo unico, SENZA virgolette, scritto interamente in corsivo.\n   Formato: <p><em>[Inserisci qui una frase poetica e magnetica personalizzata per il vino. Esempio: \"Purezza cristallina, mineralità profonda: l'essenza di Avize in un Blanc de Blancs senza tempo.\"].</em></p>\n\n8. Punti elenco (Formato fisso per le liste): \n   <p>✨ <span style=\"color: inherit; font-size: 1rem;\">[Testo breve e accattivante]</span></p>\n\nDATI DI INPUT:\n- Cantina: {{ $node[\"Code in JavaScript\"].json.domain }}\n- Vino: {{ $node[\"Code in JavaScript\"].json.nome_vino }}\n- Anno: {{ $node[\"Code in JavaScript\"].json.anno }}\n- Ricerca Tecnica (Perplexity): {{ $json.choices[0].message.content }}\n\nNOTE IMPORTANTI:\n- La frase evocativa deve essere la chiusura finale del file, come nel template di riferimento.\n- NON usare virgolette nella frase evocativa.\n- NON aggiungere tag <html> o <body>.\n- Assicurati che ogni tag <span> e <em> sia chiuso correttamente."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [-64, 528],
+      "id": "e04b7f4c-2153-4598-ada1-60164812cfeb",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $json.contenuto_md }}",
+        "name": "={{ $node[\"Code in JavaScript\"].json.domain }}_{{ $node[\"Code in JavaScript\"].json.nome_vino }}{{ $node[\"Code in JavaScript\"].json.anno ? '_' + $node[\"Code in JavaScript\"].json.anno : '' }}{{ $node[\"Code in JavaScript\"].json.litraggio ? '_' + $node[\"Code in JavaScript\"].json.litraggio : '' }}.md",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_DRIVE_FOLDER_ID",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [752, 528],
+      "id": "4442f7ed-ec85-4f19-83ed-e1eda5f1112c",
+      "name": "Create file from text",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Estrae il testo generato da GPT-5.2\nlet rawHTML = $input.item.json.output[0].content[0].text;\n\n// 2. Pulizia: Rimuove i tag strutturali pesanti mantenendo intatta la formattazione interna (em, strong, span)\nlet cleanHTML = rawHTML\n  .replace(/<!DOCTYPE html>|<\\/?html.*?>|<\\/?head>|<\\/?body>|<meta.*?>|<title>.*?<\\/title>/gi, '')\n  .trim();\n\n// 3. Recupera i dati dal nodo Code iniziale per costruire il nome file dinamico\nconst vino = $node[\"Code in JavaScript\"].json;\nconst anno = vino.anno ? `_${vino.anno}` : '';\nconst litri = vino.litraggio ? `_${vino.litraggio}` : '';\n\nreturn {\n  nome_file: `${vino.domain}_${vino.nome_vino}${anno}${litri}.md`,\n  contenuto_md: cleanHTML, // Contiene ora la frase evocativa alla fine\n  folder_id: \"\" // ID cartella Descrizioni_2026 - DA CONFIGURARE\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [288, 528],
+      "id": "20566173-977e-4154-9088-8be3338602e6",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Create Output Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Output Folder": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Perplexity Request": {
+      "main": [
+        [
+          {
+            "node": "Call Perplexity API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Perplexity API": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Prepare Perplexity Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Create file from text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": ""
+  },
+  "id": "",
+  "tags": []
+}

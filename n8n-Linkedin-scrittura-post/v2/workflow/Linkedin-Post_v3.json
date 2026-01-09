@@ -1,0 +1,1356 @@
+{
+  "name": "Linkedin-Post_v3",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "YOUR_NOTION_DATABASE_ID_1",
+          "mode": "list",
+          "cachedResultName": "YOUR_NOTION_DATABASE_ID_1",
+          "cachedResultUrl": "https://www.notion.so/YOUR_NOTION_DATABASE_ID_1"
+        },
+        "title": "database-Linkedin",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Title|title",
+              "title": "={{ $('Edit Fields').item.json.title }}"
+            },
+            {
+              "key": "URL|url",
+              "urlValue": "={{ $('Edit Fields').item.json.link }}"
+            },
+            {
+              "key": "Status|select",
+              "selectValue": "InBox"
+            },
+            {
+              "key": "AI Reason|rich_text",
+              "textContent": "={{ $('AI Agent CLASSIFIER').item.json.output.reason }}"
+            },
+            {
+              "key": "Confidence|number",
+              "numberValue": "={{ $('AI Agent CLASSIFIER').item.json.output.confidence }}"
+            },
+            {
+              "key": "Post Generated|checkbox"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4e70df87-ccbe-438c-9480-b4185e9c2cd6",
+      "name": "Save to Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1824,
+        848
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "notionApi": {
+          "id": "YOUR_NOTION_CREDENTIAL_ID",
+          "name": "Your Notion Account"
+        }
+      },
+      "notes": "Configura il Database ID"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "hour": 5
+            }
+          ]
+        },
+        "feedUrl": "http://export.arxiv.org/rss/cs.AI"
+      },
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        720
+      ],
+      "id": "10bb6b07-3af9-447d-bb97-696cb37e2b3c",
+      "name": "RSS Feed Trigger(ArXiv CS.AI)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c2e2e90b-b79d-48f5-9a32-3189c081ad50",
+              "name": "inputUrl",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        848
+      ],
+      "id": "9314bd86-3d83-42fb-b33a-1d73f3be96ae",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalizza URL per deduplicazione robusta preservando pairedItem\nconst url = $json.link;\nconst item = $input.item;\n\ntry {\n  const urlObj = new URL(url);\n  // Rimuove query params, normalizza trailing slash\n  const normalized = urlObj.origin + urlObj.pathname.replace(/\\/$/, '');\n  \n  // Preserva tutti i metadati dell'item originale incluso pairedItem\n  return {\n    json: {\n      ...$json,\n      link: normalized,\n      original_link: url\n    },\n    pairedItem: item.pairedItem\n  };\n} catch (e) {\n  // Se URL non valido, ritorna originale preservando metadati\n  return {\n    json: $json,\n    pairedItem: item.pairedItem\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "id": "979a43ab-d180-4892-82dc-0c34d9f38e87",
+      "name": "Normalize URL",
+      "position": [
+        592,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=### ROLE\nSei il Technical Gatekeeper di Stefano Borgato, AI Engineer specializzato in Context Engineering e Orchestrazione. Il tuo compito è filtrare i contenuti in ingresso per decidere se meritano un'analisi tecnica approfondita per un post su LinkedIn.\n\n### MISSION\nAnalizza il titolo e lo snippet forniti e determina se il contenuto è \"Production-Ready\" e architettonicamente rilevante secondo il mantra: \"L'AI non ha bisogno di prompt migliori, ha bisogno di Architettura\".\n\n### INPUT DATA\n- Titolo: {{ $('Edit Fields').item.json.title }}\n- Snippet/Abstract: {{ $('Edit Fields').item.json.content }}\n- Source: {{ $json.source || 'N/A' }}\n- Source Type: {{ $json.source_type || 'N/A' }}\n\n### CLASSIFICATION CRITERIA\nMantieni (keep: true) solo se il tema riguarda:\n- Agentic Workflows e Orchestrazione (n8n, LangGraph, PydanticAI, CrewAI, etc.).\n- Ingegneria del Contesto (Context Engineering), RAG avanzato, GraphRAG o gestione dei Metadata.\n- System Design per LLM e validazione degli output (Validation Loops, Type Safety, Structured Output).\n- Ricerca tecnica pura (ArXiv) che impatta direttamente la scalabilità o l'affidabilità dei sistemi AI in produzione.\n\nScarta (keep: false) se:\n- È una notizia puramente commerciale, finanziaria o di business (es. \"L'azienda X ha raccolto fondi\").\n- È un tutorial base per principianti (es. \"Come scrivere il tuo primo prompt\").\n- È puro hype di marketing senza alcun dettaglio su implementazione, architettura o trade-off tecnici.\n\n### OUTPUT STRUCTURE (JSON ONLY)\nRispondi esclusivamente con questo oggetto JSON, senza testo aggiuntivo:\n{\n  \"keep\": boolean,\n  \"reason\": \"Spiegazione tecnica brevissima (max 10 parole)\",\n  \"confidence\": 0-1\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1120,
+        848
+      ],
+      "id": "817e5774-d0d8-473f-a7fb-10ff8309f335",
+      "name": "AI Agent CLASSIFIER"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"keep\": {\n      \"type\": \"boolean\",\n      \"description\": \"True se il contenuto è tecnicamente rilevante, False se è hype o commerciale.\"\n    },\n    \"reason\": {\n      \"type\": \"string\",\n      \"description\": \"Breve spiegazione del perché il contenuto è stato accettato o scartato.\"\n    },\n    \"confidence\": {\n      \"type\": \"number\",\n      \"description\": \"Grado di certezza della classificazione (0-1).\"\n    }\n  },\n  \"required\": [\"keep\", \"reason\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1312,
+        1072
+      ],
+      "id": "757cb543-cd82-45a7-a369-b1af90953687",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🚀 **Architettura Post Pronta su Notion**\n\n📌 **Titolo:** {{ $json.property_title }}\n🤖 **Confidence Score:** {{ Math.round($node[\"AI Agent CLASSIFIER\"].json.output.confidence * 100) }}%\n🛠️ **Reasoning:** {{ $node[\"AI Agent CLASSIFIER\"].json.output.reason }}\n\n🔗 **Revisiona e Pubblica:** https://www.notion.so/{{ $node[\"Save to Notion\"].json.id.replace(/-/g, \"\") }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2000,
+        848
+      ],
+      "id": "957b166e-f9a4-433e-852c-466dc22b8ed4",
+      "name": "Send a text message",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Your Telegram Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "YOUR_NOTION_DATABASE_ID_1",
+          "mode": "list",
+          "cachedResultName": "database-Linkedin",
+          "cachedResultUrl": "https://www.notion.so/YOUR_NOTION_DATABASE_ID_1"
+        },
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "URL|url",
+              "condition": "equals",
+              "urlValue": "={{ $json.link }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        848
+      ],
+      "id": "295e6453-8713-4c51-ad0b-f8b5d4e6757c",
+      "name": "Notion Search",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "YOUR_NOTION_CREDENTIAL_ID",
+          "name": "Your Notion Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "36cf5174-3357-4373-a458-c15d5fbb90ee",
+              "leftValue": "={{ Object.keys($json).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        944,
+        848
+      ],
+      "id": "8044feda-1ea6-4bb5-8d0e-8b6a408b7fe1",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter2: Filtra solo item con keep=true E confidence>=0.7\nreturn $input.all().filter(item => {\n  const keep = item.json.output?.keep === true;\n  const confidence = Number(item.json.output?.confidence) || 0;\n  return keep && confidence >= 0.7;\n}).map(item => ({ json: item.json }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        848
+      ],
+      "id": "c8f987e1-53df-4b7d-af5f-15fa8c76c89c",
+      "name": "Filter2"
+    },
+    {
+      "parameters": {
+        "url": "=https://r.jina.ai/{{ $('Edit Fields').item.json.link }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1648,
+        848
+      ],
+      "id": "d6af56a4-233c-4a30-8fcd-bb3ad8b516e1",
+      "name": "HTTP JINA"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1072,
+        1104
+      ],
+      "id": "508be7bf-d9c4-40f5-ae58-8ba48aadd805",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "Your OpenAI Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  // 1. Diamo priorità assoluta all'URL esterno (property_url) rispetto a quello di Notion\n  const externalUrl = item.json.property_url || item.json.URL || item.json.url || \"\";\n  \n  // 2. Mapping dei restanti campi usando i nomi corretti restituiti dal trigger\n  const title = item.json.property_title || item.json.Title || item.json.title || \"Titolo mancante\";\n  const reason = item.json.property_ai_reason || item.json[\"AI Reason\"] || \"Nessun motivo specificato\";\n  const notionId = item.json.id || \"\";\n  \n  return {\n    json: {\n      url: externalUrl,\n      title: title,\n      reason: reason,\n      notion_id: notionId\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        1568
+      ],
+      "id": "c76db4a0-d9a3-4105-b0b7-58941412d85b",
+      "name": "Prepare URLs for JINA"
+    },
+    {
+      "parameters": {
+        "url": "=https://r.jina.ai/{{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1008,
+        1568
+      ],
+      "id": "b091e6b4-3de4-47a6-aee9-901f9fb8e789",
+      "name": "HTTP JINA Loop"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merger v3: Ottimizzato per l'output del nodo Aggregate\nconst inputData = $input.first().json.data; // Accede all'array creato dall'Aggregate\nlet mergedContext = \"### FONTI SELEZIONATE DALL'EDITOR (Tu):\\n\\n\";\nlet counter = 0;\n\nif (!Array.isArray(inputData)) {\n  return [{ json: { error: \"Dati non trovati nell'array 'data'\" } }];\n}\n\nfor (const item of inputData) {\n  counter++;\n  \n  // Estrazione dati dalla struttura Jina nidificata nell'Aggregate\n  const title = item.data?.title || \"Titolo non disponibile\";\n  const url = item.data?.url || \"Link non disponibile\";\n  const content = item.data?.content || \"Contenuto non disponibile\";\n  \n  // Nota: Se 'reason' non è stato aggregato nel nodo precedente, \n  // potrebbe essere necessario aggiungerlo alla configurazione dell'Aggregate\n  const reason = item.reason || \"Analisi tecnica approvata\";\n\n  mergedContext += `--- ARTICOLO ${counter} ---\\n`;\n  mergedContext += `🔹 TITOLO: ${title}\\n`;\n  mergedContext += `🔗 LINK: ${url}\\n`;\n  mergedContext += `🧠 PERCHÉ È RILEVANTE: ${reason}\\n`;\n  mergedContext += `\\n📄 CONTENUTO COMPLETO:\\n${content}\\n`;\n  mergedContext += `----------------------\\n\\n`;\n}\n\nreturn [{\n  json: {\n    combined_context: mergedContext,\n    source_count: counter,\n    status: \"Ready for Writing\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        1568
+      ],
+      "id": "62f05afa-01c1-4758-85c4-469952c234ca",
+      "name": "Code Merger v2",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=### ROLE\nSei Stefano Borgato, AI Engineer. Scrivi post LinkedIn che siano \"Manifesti Architetturali\".\n\n### STYLE GUIDE (OBBLIGATORIA)\n{{ $json.style_guide }}\n\n### MISSION\nAnalizza le {{ $json.source_count }} fonti e crea un post LinkedIn.\n\n### SELEZIONE TEMPLATE (Scegli in base al contenuto)\n\n**Se le fonti sono un PAPER/STUDIO tecnico → USA TEMPLATE B:**\n- Claim manifesto\n- 📊 Il dato chiave\n- 💡 3 Takeaway (ciascuno: claim + failure mode + guardrail)\n- Conclusione architettonica\n- Domanda per Architect\n\n**Se le fonti confrontano TOOL/STACK → USA TEMPLATE A:**\n- Titolo + emoji\n- Dilemma ❌/✅\n- ✅ PRO (2-4 bullet)\n- ⚠️ CONTRO (1-3 bullet)\n- Verdetto\n- Domanda comparativa\n\n**Se le fonti spiegano un MECCANISMO TECNICO → USA TEMPLATE C:**\n- Metafora potente (studente, orchestra, calcolatrice)\n- Problema del sistema naive\n- Meccanismo della soluzione (bullet)\n- Perché ora (tooling 2025/2026)\n- Domanda su adozione reale\n\n### VINCOLI\n1. Hook: Mai definizioni. Inizia con sfida, analogia o dato controintuitivo.\n2. Vocabolario: Termini tecnici SEMPRE in inglese (vedi Style Guide).\n3. Formattazione: \"Context Engineering\" con spazio, MAI \"ContextEngineering\".\n4. Lunghezza: Max 2000 caratteri.\n5. Tono: Asciutto, pragmatico, \"Code-First\". Zero fuffa.\n\n### INPUT (Fonti complete)\n{{ $json.combined_context }}\n\n### OUTPUT (JSON)\n{\n  \"template_used\": \"A|B|C\",\n  \"title\": \"Titolo secco\",\n  \"linkedin_post\": {\n    \"Hook\": \"Stringa\",\n    \"Corpo\": [\"Punto 1\", \"Punto 2\", \"Punto 3\"],\n    \"Closing\": \"Domanda tecnica\",\n    \"Hashtag\": \"#AIEngineering #SoftwareArchitecture\"\n  }\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1840,
+        1568
+      ],
+      "id": "d4aa48f6-7306-4360-a2d0-b7ed9a1ac234",
+      "name": "AI Agent WRITER"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=### ROLE\nSei Stefano Borgato in veste di Senior Technical Editor. Validi e correggi la bozza del tuo Junior Writer.\n\n### STYLE GUIDE (RIFERIMENTO OBBLIGATORIO)\n{{ $('STYLE CONTEXT INJECTOR').item.json.style_guide }}\n\n### MISSION\n1. Fact-check contro le fonti originali\n2. Applica rigorosamente lo stile dalla Style Guide\n3. Elimina ogni deviazione dal DNA stilistico\n\n### CHECKLIST REVISIONE\n\n**1. FACT-CHECKING**\n- Ogni claim è supportato dalle fonti?\n- Il post sintetizza TUTTE le fonti, non solo una?\n- Rimuovi concetti non verificabili.\n\n**2. STILE (CRITICO)**\n- Hook: È una sfida/analogia/dato, NON una definizione?\n- Ritmo: Alternanza frasi brevi (manifesto) e lunghe (esplicative)?\n- Vocabolario: Termini tecnici in inglese?\n- Formattazione: \"Context Engineering\" con spazio (MAI unito)?\n\n**3. CONSTRAINT NEGATIVI**\nElimina:\n- \"Rivoluzionario\", \"game-changer\", \"incredibile\", \"fondamentale\"\n- \"Nel panorama attuale\", \"scopriamo insieme\"\n- Emoji decorative (tieni solo quelle funzionali: 🛠📊⚠️✅❌💡👇)\n- Asterischi e grassetti (** o *)\n\n**4. CHIUSURA**\n- La domanda finale è per Architect/Lead (non generica)?\n- Pattern corretto: \"Voi come...?\" o \"Team X vs Team Y?\"\n\n**5. LUNGHEZZA**\n- Max 2000 caratteri. Se supera, sintetizza senza tagliare info critiche.\n\n### INPUT\n- Bozza: {{ $json.output }}\n- Fonti: {{ $('STYLE CONTEXT INJECTOR').item.json.combined_context }}\n\n### OUTPUT (JSON, senza blocchi ```)\n{\n  \"title\": \"Titolo corretto\",\n  \"linkedin_post\": {\n    \"Hook\": \"Hook corretto (no markdown)\",\n    \"Corpo\": [\"💡 1) Punto corretto\", \"💡 2) Punto corretto\", \"💡 3) Punto corretto\"],\n    \"Closing\": \"Domanda corretta\",\n    \"Hashtag\": \"#Hashtag #Corretti\"\n  },\n  \"revision_notes\": \"Breve nota sulle correzioni applicate\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2192,
+        1568
+      ],
+      "id": "59a7bf2f-a0cc-400a-8342-5c586279ad65",
+      "name": "AI Agent REVIEWER"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Formatter v9 - OTTIMIZZATO PER GOOGLE DRIVE\nlet rawContent = $input.item.json.output || $input.item.json.text || \"\";\n\nif (!rawContent) return [{ json: { title: \"Errore\", status: \"error\" } }];\n\nlet cleanString = rawContent.replace(/```json|```/g, \"\").trim();\n\ntry {\n  const parsedData = JSON.parse(cleanString);\n  let finalPost = \"\";\n\n  if (typeof parsedData.linkedin_post === 'object') {\n    const p = parsedData.linkedin_post;\n    let corpoString = Array.isArray(p.Corpo) ? p.Corpo.join(\"\\n\\n\") : (p.Corpo || \"\");\n    finalPost = `${p.Hook || \"\"}\\n\\n${corpoString}\\n\\n${p.Closing || \"\"}\\n\\n${p.Hashtag || \"\"}`;\n  } else {\n    finalPost = parsedData.linkedin_post || cleanString;\n  }\n\n  // Pulizia e formattazione\n  finalPost = finalPost.replace(/\\*\\*/g, \"\").replace(/\\*/g, \"\").replace(/\\n{3,}/g, \"\\n\\n\").trim();\n\n  return [{\n    json: {\n      title: parsedData.title || \"Post Tecnico\",\n      post_preview: finalPost.substring(0, 1900) + \"...\",\n      post_full: finalPost, // TESTO INTEGRALE PER GOOGLE DRIVE\n      status: \"success\"\n    }\n  }];\n} catch (e) {\n  return [{ json: { title: \"⚠️ ERRORE JSON\", post_full: rawContent, status: \"error\" } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        1568
+      ],
+      "id": "db65f905-f543-4da6-a6f9-3eb747cd5333",
+      "name": "Code Formatter"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1856,
+        1792
+      ],
+      "id": "3f01d00c-70f6-4963-88f0-65d8145cffed",
+      "name": "OpenAI Chat Model WRITER",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "Your OpenAI Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2208,
+        1792
+      ],
+      "id": "d0343dbc-96ac-4d0a-b5a9-232b30a45332",
+      "name": "OpenAI Chat Model REVIEWER",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "Your OpenAI Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 5,
+              "triggerAtMinute": 20
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -176,
+        1040
+      ],
+      "id": "563f6b9d-8ab2-47de-afb0-6f8c355e184d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/news",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "YOUR_SERPER_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"q\": \"LLM Agents\", \"tbs\": \"qdr:d\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        32,
+        912
+      ],
+      "id": "1c8e5fc7-5c27-4e11-b599-9129630fb974",
+      "name": "HTTP SERPER"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 5,
+              "triggerAtMinute": 40
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -176,
+        416
+      ],
+      "id": "3edd923c-030b-41a3-bf88-1e70e9fd7da1",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Adatta l'output di Serper allo standard del flusso\nconst news = $input.first().json.news;\n\nif (!news) {\n  return [];\n}\n\nreturn news.map(item => {\n  return {\n    json: {\n      title: item.title,\n      link: item.link,     // Link pulito diretto!\n      content: item.snippet,\n      pubDate: item.date,\n      source: item.source,\n      source_type : \"industry_news\",\n      content_depth: \"low\"\n    }\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        1136
+      ],
+      "id": "82acd39b-ce1b-4864-a6de-b0a1b478474d",
+      "name": "ESTRATTORE OGGETTO NOTIZIA SERPER"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Adatta l'output di SerpAPI allo standard del flusso\n// SerpAPI usa 'news_results' invece di 'news'\nconst results = $input.first().json.news_results;\n\nif (!results) {\n  return []; // Gestione sicurezza se non ci sono news\n}\n\nreturn results.map(item => {\n  return {\n    json: {\n      title: item.title,\n      link: item.link,     // SerpAPI fornisce link puliti\n      content: item.snippet,\n      pubDate: item.date,\n      source: item.source,\n      source_type: \"industry_news\",\n      content_depth: \"low\"\n    }\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        496
+      ],
+      "id": "c6c1221d-e881-4d55-a026-3c871132aa5f",
+      "name": "ESTRATTORE OGGETTO NOTIZIA SerpAPI"
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "serpApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "LLM Agents OR RAG Architecture"
+            },
+            {
+              "name": "tbm",
+              "value": "nws"
+            },
+            {
+              "name": "tbs",
+              "value": "qdr:d"
+            },
+            {
+              "name": "num",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        32,
+        288
+      ],
+      "id": "904821a2-ccf2-4918-9f4b-a7c073715c67",
+      "name": "HTTP SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "YOUR_SERPAPI_CREDENTIAL_ID",
+          "name": "Your SerpAPI Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "error-check-id",
+                    "leftValue": "={{ $json.error || $json.statusCode }}",
+                    "rightValue": 200,
+                    "operator": {
+                      "type": "number",
+                      "operation": "notEqual"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "error"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "success-check-id",
+                    "leftValue": "={{ $json.statusCode || 200 }}",
+                    "rightValue": 200,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "success"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "id": "d31a3912-9cca-45d5-8f0a-ac140a5f63db",
+      "name": "Check SerpAPI Error",
+      "position": [
+        224,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "YOUR_NOTION_DATABASE_ID_2",
+          "mode": "list",
+          "cachedResultName": "database-Linkedin-Post-generato",
+          "cachedResultUrl": "https://www.notion.so/YOUR_NOTION_DATABASE_ID_2"
+        },
+        "title": "DB-Linkedin-Post",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Titolo Post|title",
+              "title": "={{ $('Code Formatter').item.json.title }}"
+            },
+            {
+              "key": "Post Finale|rich_text",
+              "textContent": "={{ $('Code Formatter').item.json.post_preview }}"
+            },
+            {
+              "key": "Fonti URL|rich_text",
+              "textContent": "={{ $('Prepare URLs for JINA').all().map(i => i.json.url).join(', ') }}"
+            },
+            {
+              "key": "Status|select",
+              "selectValue": "Ready to Publish"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "58cd9ee3-3285-4cee-a6ad-8cae2219454d",
+      "name": "Save to Notion1",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        3104,
+        1568
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "notionApi": {
+          "id": "YOUR_NOTION_CREDENTIAL_ID",
+          "name": "Your Notion Account"
+        }
+      },
+      "notes": "Configura il Database ID"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🚀 **Architettura Post Pronta su Notion**\n\n📌 **Titolo:** {{ $('Code Formatter').item.json.title }}\n🤖 **Confidence Score:** 90%\n🛠️ **Status:** {{ $('Code Formatter').item.json.status }}\n\n🔗 **Revisiona e Pubblica:** https://www.notion.so/{{ $json.id.replace(/-/g, \"\") }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3680,
+        1568
+      ],
+      "id": "99757df8-b2a3-4f4a-b9ac-26067f257b9d",
+      "name": "Send a text message1",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Your Telegram Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop su tutti gli item in ingresso\nreturn $input.all().map(item => {\n  return {\n    json: {\n      // Mappatura diretta per uniformare i nomi dei campi\n      title: item.json.title,\n      link: item.json.link,\n      // RSS spesso usa 'summary', 'description' o 'content:encoded'. \n      // Questa logica prende il primo disponibile.\n      content: item.json.summary || item.json.description || item.json.content || \"\", \n      pubDate: item.json.pubDate || item.json.isoDate,\n      \n      // I tuoi nuovi Tag Architetturali\n      source_type: \"research_paper\",\n      content_depth: \"high\"\n    }\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        720
+      ],
+      "id": "b29ef590-2d40-43a4-877e-d38218d53284",
+      "name": "Crea oggetto Json"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        1568
+      ],
+      "id": "6b9b37cd-508f-47d3-b686-a1563f4514fb",
+      "name": "Schedule Trigger2"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "YOUR_NOTION_DATABASE_ID_1",
+          "mode": "list",
+          "cachedResultName": "database-Linkedin-Editoriale",
+          "cachedResultUrl": "https://www.notion.so/YOUR_NOTION_DATABASE_ID_1"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|select",
+              "condition": "equals",
+              "selectValue": "Selected"
+            },
+            {
+              "key": "Post Generated|checkbox",
+              "condition": "equals"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        1568
+      ],
+      "id": "a32fc26e-4d15-47b5-8c62-8bda7a047ff9",
+      "name": "Get many database pages",
+      "credentials": {
+        "notionApi": {
+          "id": "YOUR_NOTION_CREDENTIAL_ID",
+          "name": "Your Notion Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "91ff255e-7170-404f-87a0-49a7fadb5ab9",
+              "leftValue": "={{ $json.property_status }}",
+              "rightValue": "=Selected",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        464,
+        1568
+      ],
+      "id": "d28212ce-11cc-4fcd-9178-368401fe5df3",
+      "name": "Filter Status article"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        1568
+      ],
+      "id": "c28426d4-9d05-4f0f-8ce2-568b97e73fcf",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2528,
+        1792
+      ],
+      "id": "8bc3d244-dc7a-472e-bb14-e091a3cc7b3b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "Your OpenAI Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Style Context Injector - Inietta il Gold Standard Style Manual\n// Questo nodo DEVE ricevere input da \"Code Merger v2\"\n\nconst styleGuide = `\n## DNA STILISTICO STEFANO BORGATO\n\n### MANTRA\n\"L'AI non ha bisogno di prompt migliori. Ha bisogno di Architettura.\"\n\n### PATTERN HOOK (scegli uno)\n- Pattern A (Manifesto): Frase secca con antitesi. \"X non ha bisogno di Y. Ha bisogno di Z.\"\n- Pattern B (Dilemma): ❌ Opzione costosa vs ✅ Opzione efficiente\n- Pattern C (Numero): Dato impressionante o paradosso per aprire\n- Pattern D (Metafora): Analogia concreta (orchestra, studente, calcolatrice)\n\n### RITMO FRASI\n- Alternanza: manifesto breve (5-12 parole) + esplicativa lunga (20-40 parole)\n- Capoversi frequenti: 1-3 frasi, poi riga vuota\n- Antitesi con punto: \"Non X. Y.\"\n\n### VOCABOLARIO (Inglese obbligatorio)\nContext Engineering, RAG, Vector Store, Type Safety, Dependency Injection, \nProduction-Ready, Pipeline, Workflow, Guardrails, Observability, Tracing, \nLatency, Throughput, CI/CD, QA\n\n### ANALOGIE RIUTILIZZABILI\n- Orchestra/Maestro: molti agenti → serve orchestrazione\n- Mappa vs Rotta: topologia conta più delle istruzioni\n- Studente esame libro aperto: RAG naive che copia senza capire\n- Momento calcolatrice: strumenti che aumentano velocità senza eliminare competenza\n- Telescopio per la mente: AI come estensione cognitiva\n\n### EMOJI FUNZIONALI (non decorative)\n🛠 Stack tecnico | 📊 Dati/metriche | ⚠️ Limiti | ✅ Pro | ❌ Anti-pattern | 👇 CTA commenti | 💡 Insight\n\n### CHIUSURA\nDomanda tecnica per pari (Architect/Lead), non generica.\nPattern: \"Voi come gestite...?\" / \"Team X vs Team Y?\" / \"Avete già implementato...?\"\nPoi: \"Parliamone nei commenti. 👇\"\n\n### VIETATO\n- \"Rivoluzionario\", \"game-changer\" senza dati\n- \"Nel panorama attuale\", \"scopriamo insieme\"\n- CTA marketing (\"scrivimi in DM\", \"link in bio\")\n- Emoji decorative in eccesso\n- \"Migliorare la produttività\" senza metriche\n- PascalCase forzato: scrivi \"Context Engineering\" (con spazio), NON \"ContextEngineering\"\n`;\n\n// Recupera i dati dal nodo precedente (Code Merger v2)\nconst inputData = $input.first().json;\n\n// Verifica che i dati esistano\nconst combinedContext = inputData.combined_context || \"Nessun contenuto disponibile\";\nconst sourceCount = inputData.source_count || 0;\n\n// Restituisce l'oggetto con TUTTI i campi necessari\nreturn [{\n  json: {\n    style_guide: styleGuide,\n    combined_context: combinedContext,\n    source_count: sourceCount,\n    status: \"Ready for Writer\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        1568
+      ],
+      "id": "42efd8ab-566e-4c71-a7cd-464b4392b98b",
+      "name": "STYLE CONTEXT INJECTOR",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=### ROLE\nSei un Senior Content Strategist che lavora per Stefano Borgato. Il tuo compito è rendere i post tecnici accessibili anche a recruiter e HR, SENZA perdere autorevolezza tecnica.\n\n### MISSION\nPrendi il post già revisionato e applica un \"layer di accessibilità\" che permetta a un pubblico non tecnico di:\n1. Capire il PROBLEMA risolto (anche senza conoscere i dettagli)\n2. Percepire l'AUTOREVOLEZZA dell'autore\n3. Sentirsi inclusi nella conversazione\n\n### REGOLE DI INTERVENTO\n\n**1. HOOK POTENZIATO**\nSe l'hook è troppo tecnico, aggiungi UNA frase ponte all'inizio che usi un'analogia quotidiana.\n- Esempio PRIMA: \"Il RAG naive fallisce per mancanza di validazione semantica.\"\n- Esempio DOPO: \"Immaginate un assistente che legge tutti i documenti ma risponde a caso. Il RAG naive fallisce per mancanza di validazione semantica.\"\n\n**2. BRIDGE NARRATIVI (max 2)**\nIdentifica i passaggi più densi e aggiungi una micro-spiegazione tra parentesi o dopo i due punti.\n- Esempio: \"Type Safety (la garanzia che i dati abbiano sempre il formato atteso)\"\n- Esempio: \"Guardrails: i binari di sicurezza che impediscono all'AI di deragliare\"\n\n**3. COSA NON TOCCARE**\n- NON rimuovere termini tecnici inglesi\n- NON semplificare eccessivamente (il pubblico primario resta tecnico)\n- NON cambiare la struttura (Hook/Corpo/Closing)\n- NON superare 2200 caratteri totali\n\n**4. DOMANDA FINALE**\nSe la domanda è troppo tecnica per HR, aggiungi una seconda domanda più generale.\n- Esempio: \"Voi come gestite la validazione nei vostri sistemi RAG? E per chi non è tecnico: avete mai avuto un assistente AI che vi ha dato risposte sbagliate?\"\n\n### INPUT\nPost revisionato: {{ JSON.stringify($('AI Agent REVIEWER').item.json.output) }}\n\n### OUTPUT (JSON, senza blocchi ```)\n{\n  \"title\": \"Titolo (invariato o leggermente adattato)\",\n  \"linkedin_post\": {\n    \"Hook\": \"Hook potenziato con bridge narrativo\",\n    \"Corpo\": [\"Punto 1 con eventuali micro-spiegazioni\", \"Punto 2\", \"Punto 3\"],\n    \"Closing\": \"Domanda tecnica + eventuale domanda accessibile\",\n    \"Hashtag\": \"#Hashtag\"\n  },\n  \"accessibility_notes\": \"Breve nota sugli interventi di accessibilità\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2544,
+        1568
+      ],
+      "id": "a43bbdfa-a057-4f76-96ec-53f7b19f710d",
+      "name": "AI Agent HUMANIZER"
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $('Code Formatter').item.json.post_full }}",
+        "name": "={{ $('Code Formatter').item.json.title }}.md",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_DRIVE_FOLDER_ID",
+          "mode": "list",
+          "cachedResultName": "ready-to-Publish",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_GOOGLE_DRIVE_FOLDER_ID"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3392,
+        1568
+      ],
+      "id": "72a08c93-4389-4b45-8ba3-97da86b38b46",
+      "name": "Create file su drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Your Google Drive Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Normalize URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize URL": {
+      "main": [
+        [
+          {
+            "node": "Notion Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent CLASSIFIER": {
+      "main": [
+        [
+          {
+            "node": "Filter2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent CLASSIFIER",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Notion": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion Search": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent CLASSIFIER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter2": {
+      "main": [
+        [
+          {
+            "node": "HTTP JINA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP JINA": {
+      "main": [
+        [
+          {
+            "node": "Save to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent CLASSIFIER",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP SERPER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP SERPER": {
+      "main": [
+        [
+          {
+            "node": "ESTRATTORE OGGETTO NOTIZIA SERPER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "HTTP SerpAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ESTRATTORE OGGETTO NOTIZIA SERPER": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ESTRATTORE OGGETTO NOTIZIA SerpAPI": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP SerpAPI": {
+      "main": [
+        [
+          {
+            "node": "Check SerpAPI Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check SerpAPI Error": {
+      "main": [
+        [
+          {
+            "node": "HTTP SERPER",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ESTRATTORE OGGETTO NOTIZIA SerpAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare URLs for JINA": {
+      "main": [
+        [
+          {
+            "node": "HTTP JINA Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP JINA Loop": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Merger v2": {
+      "main": [
+        [
+          {
+            "node": "STYLE CONTEXT INJECTOR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent WRITER": {
+      "main": [
+        [
+          {
+            "node": "AI Agent REVIEWER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent REVIEWER": {
+      "main": [
+        [
+          {
+            "node": "AI Agent HUMANIZER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model WRITER": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent WRITER",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model REVIEWER": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent REVIEWER",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Formatter": {
+      "main": [
+        [
+          {
+            "node": "Save to Notion1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Notion1": {
+      "main": [
+        [
+          {
+            "node": "Create file su drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feed Trigger(ArXiv CS.AI)": {
+      "main": [
+        [
+          {
+            "node": "Crea oggetto Json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crea oggetto Json": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Get many database pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many database pages": {
+      "main": [
+        [
+          {
+            "node": "Filter Status article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Status article": {
+      "main": [
+        [
+          {
+            "node": "Prepare URLs for JINA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code Merger v2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent HUMANIZER",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "STYLE CONTEXT INJECTOR": {
+      "main": [
+        [
+          {
+            "node": "AI Agent WRITER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent HUMANIZER": {
+      "main": [
+        [
+          {
+            "node": "Code Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create file su drive": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "YOUR_VERSION_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "YOUR_WORKFLOW_ID",
+  "tags": []
+}
