@@ -1,0 +1,85 @@
+# N8N Workflow Files
+*.n8n
+.n8n/
+
+# Credenziali e configurazioni sensibili
+*.env
+.env.*
+!.env.example
+credentials/
+*.credentials.json
+*.key
+*.pem
+*.p12
+
+# File di dati sensibili
+Lista_vini.json
+*_vini.json
+*_sensitive.json
+*_private.json
+
+# Scripts temporanei
+scripts/
+*.sh
+*.bat
+*.ps1
+
+# File di sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.directory
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node.js (se presente)
+node_modules/
+package-lock.json
+yarn.lock
+.pnpm-debug.log
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# Screenshots temporanei (mantieni solo quelli necessari)
+screenshot/*.tmp
+screenshot/*.temp
+
+# File temporanei
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Cache
+.cache/
+*.cache
+
+# File di output generati
+output/
+generated/
+*.md
+!README.md
+
+# File di test
+test/
+tests/
+*.test.json
+*.spec.json
+
+# File di configurazione locale
+config.local.json
+settings.local.json
