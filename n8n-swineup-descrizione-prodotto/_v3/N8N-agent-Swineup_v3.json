@@ -5,13 +5,13 @@
       "parameters": {
         "notice": "Click to start the wine description generation workflow"
       },
-      "id": "b7af7ad0-e5af-46a5-a14e-0a91e5e09849",
+      "id": "72dcc068-7c9a-4a06-b365-21ee126a8a41",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -2416,
-        -192
+        -3296,
+        -112
       ]
     },
     {
@@ -70,13 +70,13 @@
         },
         "options": {}
       },
-      "id": "0548a901-bb5f-4fd6-80df-dc7d660045e3",
+      "id": "bf582dde-6992-42bd-9d64-36540b66241e",
       "name": "Workflow Configuration",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2224,
-        -192
+        -3104,
+        -112
       ]
     },
     {
@@ -99,22 +99,22 @@
         },
         "options": {}
       },
-      "id": "418ac7fa-9c5d-408a-8342-c858b88edf31",
+      "id": "9ebfa845-91cd-40e0-98a8-8a22a5692e37",
       "name": "Find Parent Folder",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1760,
-        -192
+        -2640,
+        -112
       ],
       "credentials": {
         "googleOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         },
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
@@ -125,10 +125,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1568,
-        -192
+        -2448,
+        -112
       ],
-      "id": "3d8f2dc0-fb5d-4919-8f04-0cf27fb02c62",
+      "id": "40488359-37c1-468f-a409-9fabff03b644",
       "name": "Extract Parent Folder ID"
     },
     {
@@ -151,18 +151,18 @@
         },
         "options": {}
       },
-      "id": "7abe924e-f57c-43be-b9c1-fb76515d9678",
+      "id": "93aaa9a2-eebb-4d5e-a7fd-11bed4c0f25f",
       "name": "Check Output Folder Exists",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1360,
-        -192
+        -2240,
+        -112
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
@@ -190,13 +190,13 @@
         },
         "options": {}
       },
-      "id": "a16a16ff-0441-483d-b01b-30ab7e3c6c66",
+      "id": "4a8b6637-a3ba-4fb8-89fe-18ec6efb5b5b",
       "name": "IF Folder Exists",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1152,
-        -192
+        -2032,
+        -112
       ]
     },
     {
@@ -213,13 +213,13 @@
         },
         "options": {}
       },
-      "id": "e58bdfba-3036-4ca1-b26a-d5da156267b6",
+      "id": "1c40e011-f9d2-4cb2-a857-97681b237d7d",
       "name": "Use Existing Folder",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -944,
-        -432
+        -1824,
+        -352
       ]
     },
     {
@@ -238,18 +238,18 @@
         },
         "options": {}
       },
-      "id": "97a0f2ce-ce03-4fda-8c0f-2b94d88a4a76",
+      "id": "794da1ee-897a-4bc1-820e-263f92323a9b",
       "name": "Create Output Folder",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        -944,
-        48
+        -1824,
+        128
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
@@ -267,13 +267,13 @@
         },
         "options": {}
       },
-      "id": "fb86fa07-3013-4082-be0d-aa344d5d01b4",
+      "id": "b35f433b-4455-4d8c-80aa-ad5437ff662b",
       "name": "Store Folder ID",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -752,
-        -192
+        -1632,
+        -112
       ]
     },
     {
@@ -326,13 +326,13 @@
         },
         "options": {}
       },
-      "id": "4ca2aeac-35c5-4356-a88c-aa77578fd672",
+      "id": "f2ecd0b9-7646-4d6d-95b9-76c7ebe9a547",
       "name": "Prepare Perplexity Request",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2416,
-        -96
+        1536,
+        -16
       ]
     },
     {
@@ -353,18 +353,18 @@
           }
         }
       },
-      "id": "03347f45-866f-4a3e-8f09-35b700cd54e4",
+      "id": "38fb1277-c0c8-49a4-b43c-7256400ee44f",
       "name": "Call Perplexity API",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        2592,
-        -96
+        1712,
+        -16
       ],
       "credentials": {
         "perplexityApi": {
-          "id": "YOUR_PERPLEXITY_CREDENTIAL_ID",
-          "name": "Perplexity account 2"
+          "id": "YOUR_PERPLEXITY_API_CREDENTIAL_ID",
+          "name": "YOUR_PERPLEXITY_ACCOUNT_NAME"
         }
       }
     },
@@ -375,10 +375,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2784,
-        -96
+        1904,
+        -16
       ],
-      "id": "f5ee43e7-8baa-451b-93d5-665cb865df5c",
+      "id": "67691c74-48dc-4c48-a8bb-3ce6477eface",
       "name": "Combine Data"
     },
     {
@@ -401,13 +401,13 @@
         },
         "options": {}
       },
-      "id": "455a0f43-b9c4-40bf-9095-63e531bbfa60",
+      "id": "abbc8f92-7724-4d1a-9226-b27fa5aab3c2",
       "name": "Extract File ID",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        368,
-        -192
+        -512,
+        -112
       ]
     },
     {
@@ -423,15 +423,15 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        576,
-        -192
+        -304,
+        -112
       ],
-      "id": "0c3a8391-8651-4849-b5d5-54a5442d2245",
+      "id": "2f577a98-48e9-4426-b37c-365493de4ea1",
       "name": "Download file",
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
@@ -443,10 +443,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        768,
-        -192
+        -112,
+        -112
       ],
-      "id": "abbe4189-b113-4623-841c-fb1b49e93235",
+      "id": "bcf35d0f-ecf2-4e9a-8b63-822cf9728875",
       "name": "Extract from File"
     },
     {
@@ -471,15 +471,15 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        3696,
-        -96
+        2816,
+        -16
       ],
-      "id": "171a01fb-9965-460a-8bb9-d1bf25be8907",
+      "id": "28ae16ae-978d-465c-9219-128059b2ae61",
       "name": "Create file from text",
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
@@ -492,16 +492,16 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        4096,
-        -512
+        3216,
+        -432
       ],
-      "id": "1d5181b7-a47a-40ff-95ea-6e2790d2391e",
+      "id": "9a13bde9-dde0-4f1d-b477-e839c56ed6fd",
       "name": "messaggio Telegram WF completo",
-      "webhookId": "YOUR_TELEGRAM_WEBHOOK_ID",
+      "webhookId": "YOUR_WEBHOOK_ID",
       "credentials": {
         "telegramApi": {
-          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
-          "name": "Telegram account"
+          "id": "YOUR_TELEGRAM_API_CREDENTIAL_ID",
+          "name": "YOUR_TELEGRAM_ACCOUNT_NAME"
         }
       }
     },
@@ -512,10 +512,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        960,
-        -192
+        80,
+        -112
       ],
-      "id": "b3fa0359-dda5-4907-bb3d-900aeb66e8dd",
+      "id": "8a9d3486-a107-4494-93c6-b66be9c8f7d8",
       "name": "Estrae primo prodotto"
     },
     {
@@ -538,45 +538,48 @@
         },
         "options": {}
       },
-      "id": "9e480a4d-825a-429f-9c32-1763855e8d3c",
+      "id": "cf18bdf0-b497-4c14-8bee-019a3b106b31",
       "name": "Get Existing Files",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        512,
-        192
+        -368,
+        272
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Filtra i vini escludendo quelli che hanno già il file di descrizione esistente\n// I dati arrivano dal Merge: items da Estrae primo prodotto e item da Get Existing Files\n// FIX: Confronto basato su domain + nome_vino (chiave primaria), ignorando varianti annata/litraggio\nconst allItems = $input.all();\n\n// Separa i vini dai file esistenti\nlet allVini = [];\nlet existingFilesResponse = null;\n\nfor (const item of allItems) {\n  if (item.json.files && Array.isArray(item.json.files)) {\n    existingFilesResponse = item.json;\n  } else if (item.json.domain || item.json.nome_vino) {\n    allVini.push(item);\n  }\n}\n\nif (allVini.length === 0) {\n  throw new Error('Nessun vino trovato nel merge');\n}\n\n// Estrae i nomi dei file esistenti dalla risposta di Google Drive\nlet existingFileNames = [];\nlet existingFilesArray = [];\nif (existingFilesResponse && existingFilesResponse.files && Array.isArray(existingFilesResponse.files)) {\n  existingFilesArray = existingFilesResponse.files;\n  existingFileNames = existingFilesArray.map(file => (file.name || '').toLowerCase().trim()).filter(name => name);\n}\n\nconsole.log('File esistenti trovati: ' + existingFileNames.length);\nconsole.log('File esistenti: ' + existingFileNames.join(', '));\n\n// Estrae la chiave base (domain_nomevino) da un nome file esistente\n// Rimuove estensione, annata (pattern _YYYY) e litraggio (pattern _XXXml o _X.Xl)\nfunction extractBaseKey(fileName) {\n  let name = fileName.replace(/\\.md$/i, '').toLowerCase().trim();\n  // Rimuove pattern annata: _2020, _2021, _2022, _2023, _2024, _2025, _2026 ecc\n  name = name.replace(/_20\\d{2}/g, '');\n  // Rimuove pattern litraggio: _750ml, _1.5l, _375ml, _magnum ecc\n  name = name.replace(/_\\d+(\\.\\d+)?(ml|l|cl)$/i, '');\n  name = name.replace(/_magnum$/i, '');\n  name = name.replace(/_jeroboam$/i, '');\n  name = name.replace(/_mathusalem$/i, '');\n  // Rimuove trailing underscore multipli\n  name = name.replace(/_+$/, '').replace(/_+/g, '_');\n  return name;\n}\n\n// Genera la chiave base per un vino dal JSON (solo domain + nome_vino)\nfunction getBaseKey(vino) {\n  const domain = (vino.domain || '').trim().toLowerCase();\n  const nomeVino = (vino.nome_vino || '').trim().toLowerCase();\n  if (!domain || !nomeVino) return null;\n  return (domain + '_' + nomeVino).replace(/\\s+/g, '_').replace(/_+/g, '_');\n}\n\n// Costruisce un set di chiavi base dai file esistenti per lookup O(1)\nconst existingBaseKeys = new Set();\nfor (const fileName of existingFileNames) {\n  const baseKey = extractBaseKey(fileName);\n  if (baseKey) {\n    existingBaseKeys.add(baseKey);\n    console.log('Chiave base estratta: ' + baseKey + ' (da ' + fileName + ')');\n  }\n}\n\n// Filtra i vini che non hanno ancora il file (basandosi sulla chiave base)\nconst viniDaProcessare = allVini.filter(item => {\n  const vino = item.json;\n  const baseKey = getBaseKey(vino);\n  \n  if (!baseKey) {\n    console.log('Vino senza chiave valida, incluso per gestione errori');\n    return true;\n  }\n  \n  // Verifica se esiste già un file con la stessa chiave base\n  const fileExists = existingBaseKeys.has(baseKey);\n  \n  if (fileExists) {\n    const vinoInfo = vino.domain + ' ' + vino.nome_vino + ' ' + (vino.anno || '') + ' ' + (vino.litraggio || '');\n    console.log('Prodotto già esistente (chiave: ' + baseKey + '): ' + vinoInfo + ' - SKIP');\n  } else {\n    console.log('Nuovo prodotto (chiave: ' + baseKey + '): ' + vino.domain + ' ' + vino.nome_vino);\n  }\n  \n  return !fileExists;\n});\n\n// FIX: Se non ci sono vini da processare, restituisci un item con flag isEmpty\n// In questo modo il flusso continua e Check Empty Array può decidere correttamente\nif (viniDaProcessare.length === 0) {\n  console.log('Tutti i vini hanno già le descrizioni generate. Nessun file da processare.');\n  // Passa i file esistenti per il resoconto finale\n  return [{ json: { \n    isEmpty: true, \n    existingFiles: existingFilesArray.map(f => f.name).filter(Boolean),\n    existingFilesCount: existingFilesArray.length\n  } }];\n}\n\nconsole.log(viniDaProcessare.length + ' vini da processare su ' + allVini.length + ' totali');\n\nreturn viniDaProcessare;"
+        "jsCode": "// Recupera i file dalla cartella specifica e i vini dal JSON\nconst allItems = $input.all();\nlet allVini = [];\nlet existingFilesResponse = null;\n\nfor (const item of allItems) {\n  // Identifica la risposta che contiene la lista dei file di Drive\n  if (item.json.files && Array.isArray(item.json.files)) {\n    existingFilesResponse = item.json;\n  } else if (item.json.domain || item.json.nome_vino) {\n    allVini.push(item);\n  }\n}\n\n// Funzione per normalizzare i nomi (rimuove spazi, trattini e simboli)\nfunction fingerprint(str) {\n  return (str || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');\n}\n\n// 1. Crea un set di \"impronte digitali\" dei file già esistenti nella cartella\nlet existingFingerprints = new Set();\nif (existingFilesResponse && existingFilesResponse.files) {\n  existingFilesResponse.files.forEach(f => {\n    // Rimuove .md e pulisce il nome del file esistente\n    existingFingerprints.add(fingerprint(f.name.replace(/\\.md$/i, '')));\n  });\n}\n\n// 2. Filtra la lista dei vini\nconst nuoviVini = allVini.filter(item => {\n  const v = item.json;\n  // Crea l'impronta di quello che STIAMO PER cercare/creare\n  const target = fingerprint(`${v.domain}${v.nome_vino}${v.anno || ''}${v.litraggio || ''}`);\n  \n  // Se l'impronta esiste già nella cartella, scarta (true = tieni, false = scarta)\n  return !existingFingerprints.has(target);\n});\n\n// Se non ci sono nuovi vini, invia un segnale di stop\nif (nuoviVini.length === 0) {\n  return [{ json: { isEmpty: true } }];\n}\n\nreturn nuoviVini;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1408,
-        -64
+        528,
+        16
       ],
-      "id": "aad8c7da-fd46-4bbd-b03b-04858c00bfca",
+      "id": "e16abd06-aafa-4c40-8af0-93d53857cd03",
       "name": "Filter Existing Files"
     },
     {
-      "parameters": {},
-      "id": "b3dd7a41-c86a-48d4-99cc-a54b10f9acb5",
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "be4e284a-5dbf-4b89-b0b2-5e7873a525e2",
       "name": "Merge Files Data",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1216,
-        -64
-      ],
-      "disabled": true
+        336,
+        16
+      ]
     },
     {
       "parameters": {
@@ -602,13 +605,13 @@
         },
         "options": {}
       },
-      "id": "e3f4ba61-3926-4bd6-bfb6-b4ddc784881b",
+      "id": "e3c7197c-9551-4113-a6cd-5a5ffbdd9d04",
       "name": "Check Empty Array",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        1664,
-        -64
+        784,
+        16
       ]
     },
     {
@@ -618,23 +621,23 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1968,
-        -48
+        1088,
+        32
       ],
-      "id": "cda2fe5a-3fbc-4089-9308-05cff0962120",
+      "id": "837c9c57-3f46-4d55-84c1-8897898e6e30",
       "name": "Prepare Empty Message"
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "919a7275-b428-4cfc-bc99-dd0427d983e3",
+      "id": "9c9e9b3b-0bbb-4d24-b426-7e6fdb73ba05",
       "name": "Split In Batches",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        2368,
-        -496
+        1488,
+        -416
       ]
     },
     {
@@ -644,10 +647,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2592,
-        -512
+        1712,
+        -432
       ],
-      "id": "529731e8-b227-44d5-9465-79529c739bd1",
+      "id": "023a2397-e57f-4786-b8f7-aa22874953a3",
       "name": "Prepare Final Message"
     },
     {
@@ -657,10 +660,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3488,
-        -96
+        2608,
+        -16
       ],
-      "id": "c7c1cd6d-3b6d-4e58-bc5a-9916d0477dc9",
+      "id": "fde7b833-084a-4a10-b9c8-05c91214534a",
       "name": "Pulizia+Formattazione Testo"
     },
     {
@@ -672,10 +675,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        2960,
-        -96
+        2080,
+        -16
       ],
-      "id": "c11fa6fa-8fed-4ecd-8516-8bd4adee5dcc",
+      "id": "45fc4b60-3d3c-4b99-9873-c79a757be0cf",
       "name": "AI Agent"
     },
     {
@@ -685,10 +688,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3296,
-        -96
+        2416,
+        -16
       ],
-      "id": "d715b944-7f54-42a4-b3a7-c86ae8c48e8e",
+      "id": "5ea797a5-4ccd-41cd-ab88-1592fa0a1d44",
       "name": "Combine AI Output"
     },
     {
@@ -705,15 +708,15 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        3536,
-        -368
+        2656,
+        -288
       ],
-      "id": "a09682b0-af1c-42d5-ad6b-afb3a017259d",
+      "id": "994976ae-d521-4288-a231-2c473eebf953",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "YOUR_OPENAI_CREDENTIAL_ID",
-          "name": "OpenAi account"
+          "id": "YOUR_OPENAI_API_CREDENTIAL_ID",
+          "name": "YOUR_OPENAI_ACCOUNT_NAME"
         }
       }
     },
@@ -725,13 +728,13 @@
           "removeOtherFields": false
         }
       },
-      "id": "f93b1659-59b4-4371-b839-1bf4f1337391",
+      "id": "31742c35-16bf-47be-81d7-be7b962ec15a",
       "name": "Remove Duplicates Domains",
       "type": "n8n-nodes-base.removeDuplicates",
       "typeVersion": 2,
       "position": [
-        1216,
-        -400
+        336,
+        -320
       ]
     },
     {
@@ -754,13 +757,13 @@
         },
         "options": {}
       },
-      "id": "a3390e81-56e8-4a9a-b738-ef656e443751",
+      "id": "7e9ca801-4bb3-4cb7-96a3-833e1577cf5e",
       "name": "Prepare Perplexity Cantina Request",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1424,
-        -400
+        544,
+        -320
       ]
     },
     {
@@ -781,18 +784,18 @@
           }
         }
       },
-      "id": "2fb60b97-3476-483a-bd6b-c760766d0259",
+      "id": "9527e8ca-2fb2-476f-908c-fa5c0408cf60",
       "name": "Call Perplexity API (Cantina)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1616,
-        -400
+        736,
+        -320
       ],
       "credentials": {
         "perplexityApi": {
-          "id": "YOUR_PERPLEXITY_CREDENTIAL_ID",
-          "name": "Perplexity account 2"
+          "id": "YOUR_PERPLEXITY_API_CREDENTIAL_ID",
+          "name": "YOUR_PERPLEXITY_ACCOUNT_NAME"
         }
       }
     },
@@ -801,13 +804,13 @@
         "mode": "runOnceForEachItem",
         "jsCode": "// Estrae profilo cantina dalla risposta Perplexity e lo associa al domain\n// Nota: quando fullResponse=true, la risposta JSON è in $json.body\n\nconst prev = $('Prepare Perplexity Cantina Request').item.json;\nconst resolvedDomain = ((prev && prev.domain) ? prev.domain : '').trim();\n\nif (!resolvedDomain) {\n  throw new Error('Domain non trovato per la ricerca cantina');\n}\n\nconst response = ($json && $json.body) ? $json.body : $json;\nconst content = (response && response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content)\n  ? response.choices[0].message.content\n  : null;\n\nif (!content) {\n  throw new Error('Risposta Perplexity non valida per la ricerca cantina');\n}\n\nreturn { json: { domain: resolvedDomain, cantina_research: content } };\n"
       },
-      "id": "94c62457-3eba-4307-b9ca-af5cff9a2089",
+      "id": "a9933373-23de-47c7-a961-0cd16e4da704",
       "name": "Extract Cantina Research",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1824,
-        -400
+        944,
+        -320
       ]
     },
     {
@@ -819,13 +822,13 @@
           "multipleMatches": "first"
         }
       },
-      "id": "2e637e89-edef-4d71-bb9b-f7d4523ac06e",
+      "id": "a503a742-2354-4c91-8b67-a80ac0873a41",
       "name": "Merge Cantina Research",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2176,
-        -496
+        1296,
+        -416
       ]
     },
     {
@@ -848,18 +851,18 @@
         },
         "options": {}
       },
-      "id": "5eb84583-6ef9-49f1-9604-e79b8ea9529e",
+      "id": "776019a2-2688-4690-96fc-58b21d7130c6",
       "name": "Check Product Folder Exists",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -544,
-        -192
+        -1424,
+        -112
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
@@ -887,13 +890,13 @@
         },
         "options": {}
       },
-      "id": "290df89b-8bf2-4195-adf2-71beb6e13a50",
+      "id": "c109e14c-f1cf-43e7-93a5-2ea2627cbb82",
       "name": "IF Product Folder Exists",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -304,
-        -192
+        -1184,
+        -112
       ]
     },
     {
@@ -910,13 +913,13 @@
         },
         "options": {}
       },
-      "id": "58467280-fd72-49d4-bae4-881b76b7ff65",
+      "id": "2ee2ebe3-41be-4453-baa5-e9f15771169a",
       "name": "Use Existing Product Folder",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -112,
-        -416
+        -992,
+        -336
       ]
     },
     {
@@ -935,18 +938,18 @@
         },
         "options": {}
       },
-      "id": "c5e69670-3c7c-48d8-8ca8-61b8d51297f8",
+      "id": "e751031c-0ddc-4d1d-85ca-9b56bc822737",
       "name": "Create Product Folder",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        -112,
-        48
+        -992,
+        128
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
@@ -964,13 +967,13 @@
         },
         "options": {}
       },
-      "id": "3770ee4d-807d-49e2-8673-b41aa6942166",
+      "id": "15ef836e-c267-4794-87f1-cecefa627f69",
       "name": "Store Product Folder ID",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        80,
-        -192
+        -800,
+        -112
       ]
     },
     {
@@ -993,18 +996,18 @@
         },
         "options": {}
       },
-      "id": "5c2c57f1-1606-4da6-8221-096802f118f9",
+      "id": "c708c0c9-70a3-4746-bd0d-f422c88524a4",
       "name": "Check Domain Folder Exists",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        352,
-        -672
+        -528,
+        -592
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
@@ -1032,13 +1035,13 @@
         },
         "options": {}
       },
-      "id": "ef09a2e2-b527-4c56-bbca-856c55e0d8f0",
+      "id": "3caf3ca6-bde5-4258-b8af-595d01703910",
       "name": "IF Domain Folder Exists",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        560,
-        -672
+        -320,
+        -592
       ]
     },
     {
@@ -1055,13 +1058,13 @@
         },
         "options": {}
       },
-      "id": "5e112151-bc4b-4e61-9ded-640c5f672186",
+      "id": "9816760d-c0cd-4a08-916f-dc9cd2deaae5",
       "name": "Use Existing Domain Folder",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        784,
-        -832
+        -96,
+        -752
       ]
     },
     {
@@ -1080,18 +1083,18 @@
         },
         "options": {}
       },
-      "id": "d9adbd60-225c-4946-949f-2ee3617b59aa",
+      "id": "baad3243-4e55-4754-b264-112a0ce90059",
       "name": "Create Domain Folder",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        784,
-        -528
+        -96,
+        -448
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
@@ -1109,13 +1112,13 @@
         },
         "options": {}
       },
-      "id": "a50ff38d-40cd-4b24-b837-f0b24217d453",
+      "id": "aaf9e995-176e-4ba4-accb-907edf7d24ef",
       "name": "Store Domain Folder ID",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        992,
-        -688
+        112,
+        -608
       ]
     },
     {
@@ -1138,30 +1141,30 @@
         },
         "options": {}
       },
-      "id": "1e71fd2b-468a-4aa4-b7f9-079d144eb962",
+      "id": "9ceb8782-74cb-49da-a525-d722c0216b32",
       "name": "Get Existing Domain Files",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1232,
-        -688
+        352,
+        -608
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
     {
       "parameters": {},
-      "id": "9dc93d10-04aa-4cda-ba19-2953945c7fd1",
+      "id": "813f9c97-bec8-49c1-8fd7-2c0a19ff3471",
       "name": "Merge Domain Files Data",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2096,
-        -896
+        1216,
+        -816
       ]
     },
     {
@@ -1171,10 +1174,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2336,
-        -896
+        1456,
+        -816
       ],
-      "id": "2cfd4714-3e38-4d9e-b42c-cae3dc49592f",
+      "id": "300a7341-0256-4470-a31b-d0f094a5f35f",
       "name": "Filter Existing Domain Files"
     },
     {
@@ -1201,26 +1204,26 @@
         },
         "options": {}
       },
-      "id": "14b93bef-7895-4fa4-93be-a472e860976b",
+      "id": "e89b4370-2582-4d77-ab22-b857b6b71952",
       "name": "Check Empty Array (Domain)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        2592,
-        -896
+        1712,
+        -816
       ]
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "8b26fe47-5c45-48e8-b252-c6a39ade34a2",
+      "id": "c6137536-2399-4f93-b0df-dfa66ba03351",
       "name": "Split In Batches (Domain)",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        2944,
-        -1072
+        2064,
+        -992
       ]
     },
     {
@@ -1232,10 +1235,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        3136,
-        -912
+        2256,
+        -832
       ],
-      "id": "7c3420be-dcc8-4b9f-86e3-55231788b248",
+      "id": "fe786c4e-b23e-4dab-b508-a1b88b3fd694",
       "name": "AI Agent (Domain)"
     },
     {
@@ -1245,10 +1248,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3424,
-        -912
+        2544,
+        -832
       ],
-      "id": "d462f052-0c34-4515-90af-087b309b7bd4",
+      "id": "31807056-daf5-42f9-878b-ccdc75b0346f",
       "name": "Combine Domain AI Output"
     },
     {
@@ -1258,10 +1261,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3616,
-        -912
+        2736,
+        -832
       ],
-      "id": "94ea6f9b-06dd-48fd-989d-1f24c7e77286",
+      "id": "261d56d5-1d5d-4167-bf12-cb3afeb28a30",
       "name": "Pulizia+Formattazione Testo (Domain)"
     },
     {
@@ -1286,15 +1289,15 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        3840,
-        -912
+        2960,
+        -832
       ],
-      "id": "c7f123af-7394-4bb6-ae2d-b54dc92b016c",
+      "id": "08598f61-1dad-4643-852b-762d9e11b35f",
       "name": "Create file from text (Domain)",
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
-          "name": "Google Drive account"
+          "name": "YOUR_GOOGLE_DRIVE_ACCOUNT_NAME"
         }
       }
     },
@@ -1305,10 +1308,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3184,
-        -1200
+        2304,
+        -1120
       ],
-      "id": "3c3d825a-7a71-44c8-a074-3438b1d4bbe7",
+      "id": "42070b33-f0c6-426f-822e-426496cbc6ec",
       "name": "Prepare Final Message (Domain)"
     },
     {
@@ -1318,10 +1321,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3056,
-        -688
+        2176,
+        -608
       ],
-      "id": "91326434-3ddb-4a8c-9110-33c4313bc86d",
+      "id": "24308910-4184-4d0c-955c-dc07f112c988",
       "name": "Prepare Empty Message (Domain)"
     },
     {
@@ -1331,10 +1334,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2816,
-        -432
+        1936,
+        -352
       ],
-      "id": "276bf71f-a7a6-47c5-9110-0bc12710ee4d",
+      "id": "3050d476-cf2c-46d0-81bd-baeaf09ba16b",
       "name": "Set Product Summary"
     },
     {
@@ -1344,10 +1347,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3456,
-        -688
+        2576,
+        -608
       ],
-      "id": "993ef7be-ad7a-4101-a53f-f9224c015fa2",
+      "id": "10de4fea-fb4f-4fa2-bd28-841f34670fc6",
       "name": "Set Domain Summary"
     },
     {
@@ -1357,10 +1360,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3920,
-        -512
+        3040,
+        -432
       ],
-      "id": "4450dd07-f6d1-4f51-ac58-af930a39cf8d",
+      "id": "38ec94f0-50c8-4a0a-8b5f-e4220222c84a",
       "name": "Compose Telegram Message"
     },
     {
@@ -1372,10 +1375,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -1776,
-        -320
+        -2656,
+        -240
       ],
-      "id": "c1d3e1a3-d418-41de-bc45-66399febf5e0",
+      "id": "db2340e2-0fdc-4689-8948-d27686e0035c",
       "name": "Sticky Note"
     },
     {
@@ -1387,10 +1390,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -752,
-        -320
+        -1632,
+        -240
       ],
-      "id": "e0a8b84a-033a-4e8c-9207-f7191e239864",
+      "id": "ede6249c-fef1-420e-8eac-45cb4818552c",
       "name": "Sticky Note1"
     },
     {
@@ -1402,40 +1405,42 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        336,
-        -800
+        -544,
+        -720
       ],
-      "id": "ff566067-9a6f-4662-b0e9-4a53ff24c6f7",
+      "id": "2c901d17-e546-4a75-b174-2bbfa07529c3",
       "name": "Sticky Note2"
     },
     {
       "parameters": {
         "content": "## Trigger INIZIALE",
         "height": 192,
-        "width": 304
+        "width": 304,
+        "color": 3
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -2416,
-        -288
+        -3296,
+        -208
       ],
-      "id": "cf9c81b6-da4b-451b-b69d-8538160511de",
+      "id": "cb874bf7-3e7d-4a77-a317-b879af7fc850",
       "name": "Sticky Note3"
     },
     {
       "parameters": {
         "content": "## Preparazione del messaggio TELEGRAM \n",
         "height": 208,
-        "width": 480
+        "width": 480,
+        "color": 3
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3728,
-        -608
+        2848,
+        -528
       ],
-      "id": "858724c4-73b5-4d28-a4de-b7b440803742",
+      "id": "8852468d-94b8-4557-81e7-2c14218ebf7e",
       "name": "Sticky Note4"
     },
     {
@@ -1447,10 +1452,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3120,
-        -1024
+        2240,
+        -944
       ],
-      "id": "ce722d89-e411-4cb3-b144-8dd6dcc7f538",
+      "id": "fe8fdd41-728b-424b-93a8-fc4f90d75cea",
       "name": "Sticky Note5"
     },
     {
@@ -1462,10 +1467,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2384,
-        -208
+        1504,
+        -128
       ],
-      "id": "3dd370ae-080f-45c0-b941-142f2043d6ec",
+      "id": "759f72e5-2e20-468f-a4f8-32f7a9c4e04a",
       "name": "Sticky Note6"
     },
     {
@@ -1477,10 +1482,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        352,
-        -320
+        -528,
+        -240
       ],
-      "id": "ba1cc7f2-1aeb-44c3-845a-e75cd5a232ee",
+      "id": "d74333c2-0504-4b9f-be29-b03b3e98bb54",
       "name": "Sticky Note7"
     },
     {
@@ -1492,13 +1497,13 @@
           "multipleMatches": "first"
         }
       },
-      "id": "8bacf9c7-4d5d-492b-a02a-dc5a7bccaf3d",
+      "id": "b01525c1-0a7f-4aa3-88dc-3851aeadffc0",
       "name": "Merge Summaries",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        3760,
-        -512
+        2880,
+        -432
       ]
     },
     {
@@ -1510,10 +1515,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2144,
-        -608
+        1264,
+        -528
       ],
-      "id": "6de4913e-900d-4cb0-a1c9-51ceab414ebd",
+      "id": "5720d268-7b52-4ff5-b95e-aa24904e23e4",
       "name": "Sticky Note8"
     },
     {
@@ -1525,40 +1530,42 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2080,
-        -976
+        1200,
+        -896
       ],
-      "id": "388c169e-54bb-4661-a731-841ffeeed056",
+      "id": "ccef0c6c-30ec-4d0e-bd8f-a6ce095f2f00",
       "name": "Sticky Note9"
     },
     {
       "parameters": {
         "content": "## Recupera\nfile prodotto preesistenti",
         "height": 208,
-        "width": 150
+        "width": 150,
+        "color": 6
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        496,
-        80
+        -384,
+        160
       ],
-      "id": "f043f579-96e4-4c31-99d1-b2cbe7b3a86b",
+      "id": "2bc5abb9-0858-45df-9504-888cf371198b",
       "name": "Sticky Note10"
     },
     {
       "parameters": {
         "content": "## Recupera\nfile dominio preesistenti",
         "height": 208,
-        "width": 150
+        "width": 150,
+        "color": 6
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1216,
-        -800
+        336,
+        -720
       ],
-      "id": "142404fd-321e-4ecb-a2e6-8261372dde7b",
+      "id": "b0b5929d-53a2-42cb-a8e6-ef72f5caef1e",
       "name": "Sticky Note11"
     },
     {
@@ -1570,10 +1577,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1200,
-        -480
+        320,
+        -400
       ],
-      "id": "ebac8e6d-7a44-46e3-91e4-f11a8fa4e686",
+      "id": "e026fe5a-1bfb-45c5-8cd3-89a2955533c3",
       "name": "Sticky Note12"
     },
     {
@@ -1585,53 +1592,56 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1184,
-        -144
+        304,
+        -64
       ],
-      "id": "697f0ae2-98bb-452d-afa3-54d82da8fa8a",
+      "id": "67e3d897-0d0a-487d-ada4-213d68a3ce93",
       "name": "Sticky Note13"
     },
     {
       "parameters": {
         "content": "## o esiste \n\n## o la crea",
-        "width": 160
+        "width": 160,
+        "color": 6
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -976,
-        -208
+        -1856,
+        -128
       ],
-      "id": "e9bffaf9-24a1-4c69-b92a-1a59826bf370",
+      "id": "9a0da477-7598-4811-b354-ab73cd7bf9f6",
       "name": "Sticky Note14"
     },
     {
       "parameters": {
         "content": "## o esiste \n\n## o la crea",
-        "width": 150
+        "width": 150,
+        "color": 6
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -128,
-        -208
+        -1008,
+        -128
       ],
-      "id": "500251ca-9903-4cd8-b371-de143ecd19ce",
+      "id": "81830af9-a4d3-417e-b319-a7f56a04d4f8",
       "name": "Sticky Note15"
     },
     {
       "parameters": {
         "content": "## o esiste \n\n## o la crea",
         "height": 128,
-        "width": 150
+        "width": 150,
+        "color": 6
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        752,
-        -672
+        -128,
+        -592
       ],
-      "id": "b9ac6cd5-cdfd-4b01-afd0-b4c68eca45e5",
+      "id": "90a06e40-7b54-4540-aa11-0fcac4d6721f",
       "name": "Sticky Note16"
     }
   ],
