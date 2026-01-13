@@ -62,3 +62,8 @@ test-output/
 sviluppo/
 output/
 post-linkedin/
+
+# File di dati di esempio (opzionale - rimuovere se si vuole committare)
+# n8n-swineup-descrizione-prodotto/Lista_vini.json
+
+Lista_vini.json

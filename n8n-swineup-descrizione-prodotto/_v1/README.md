@@ -31,10 +31,10 @@ Il workflow automatizza la creazione di descrizioni professionali per vini, comb
 1. **Manual Trigger**: Avvio manuale del workflow
 2. **Workflow Configuration**: Impostazione parametri configurabili:
    - `templateSheetName`: Nome del foglio template (default: "template_descrizione")
-   - `parentFolderName`: Nome della cartella padre su Google Drive (default: "Riccardo_Stevanin")
+   - `parentFolderName`: Nome della cartella padre su Google Drive (default: "YOUR_PARENT_FOLDER_NAME")
    - `outputFolderName`: Nome cartella output (default: "Descrizioni_2026")
    - `perplexityModel`: Modello Perplexity da utilizzare (default: "sonar-pro")
-   - `inputFileId`: ID del file Google Drive contenente la lista vini (default: "1akqZBK2-q3bciq6pFHu9Bk0ZQ6q5H1KL")
+   - `inputFileId`: ID del file Google Drive contenente la lista vini (default: "YOUR_GOOGLE_DRIVE_FILE_ID")
 3. **Find Parent Folder**: Ricerca della cartella padre su Google Drive tramite nome nella root
 4. **Extract Parent Folder ID**: Estrazione ID cartella padre dalla risposta API con validazione
 5. **Check Output Folder Exists**: Verifica esistenza cartella di output nella cartella padre
@@ -112,7 +112,7 @@ Il workflow automatizza la creazione di descrizioni professionali per vini, comb
 26. **Prepare Empty Message**: Preparazione messaggio quando tutti i vini sono già processati
     - Messaggio informativo senza lista file
 27. **messaggio Telegram WF completo**: Invio notifica Telegram con riepilogo finale
-    - Chat ID: 5124355229
+    - Chat ID: YOUR_TELEGRAM_CHAT_ID
     - Messaggio: riepilogo file creati o messaggio vuoto
 
 ## Configurazione
@@ -122,29 +122,29 @@ Il workflow automatizza la creazione di descrizioni professionali per vini, comb
 Il workflow richiede le seguenti credenziali configurate in n8n:
 
 - **Google Drive OAuth2 API**: Accesso a Google Drive per lettura/scrittura file
-  - Credential ID utilizzato: "FcCuSrEkOZ65tW8H"
+  - Credential ID utilizzato: "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID"
   - Permessi richiesti: lettura e scrittura file/cartelle
 - **Perplexity API**: Chiave API per ricerche approfondite
-  - Credential ID utilizzato: "SVhXcXC2AgVxGn8A"
+  - Credential ID utilizzato: "YOUR_PERPLEXITY_CREDENTIAL_ID"
   - Endpoint: `https://api.perplexity.ai/chat/completions`
 - **OpenAI API**: Chiave API per generazione contenuti
-  - Credential ID utilizzato: "qsNd2jnBZOYeOwMG"
+  - Credential ID utilizzato: "YOUR_OPENAI_CREDENTIAL_ID"
   - Model utilizzato: gpt-5-mini
 - **Telegram API**: Token bot Telegram per notifiche
-  - Credential ID utilizzato: "NG96mjqJ1hJCYo9F"
-  - Chat ID: 5124355229
+  - Credential ID utilizzato: "YOUR_TELEGRAM_CREDENTIAL_ID"
+  - Chat ID: YOUR_TELEGRAM_CHAT_ID
 
 ### Parametri Configurabili
 
 Tutti i parametri sono configurabili nel nodo "Workflow Configuration":
 
 - `templateSheetName`: Nome del foglio template (default: "template_descrizione")
-- `parentFolderName`: Nome della cartella padre su Google Drive (default: "Riccardo_Stevanin")
+- `parentFolderName`: Nome della cartella padre su Google Drive (default: "YOUR_PARENT_FOLDER_NAME")
   - La cartella deve esistere nella root del Drive
 - `outputFolderName`: Nome cartella output (default: "Descrizioni_2026")
   - Viene creata nella cartella padre se non esiste
 - `perplexityModel`: Modello Perplexity da utilizzare (default: "sonar-pro")
-- `inputFileId`: ID del file Google Drive contenente la lista vini (default: "1akqZBK2-q3bciq6pFHu9Bk0ZQ6q5H1KL")
+- `inputFileId`: ID del file Google Drive contenente la lista vini (default: "YOUR_GOOGLE_DRIVE_FILE_ID")
   - Il file deve essere accessibile con le credenziali Google Drive configurate
 
 ### File di Input
@@ -233,10 +233,10 @@ Le descrizioni generate seguono una struttura HTML predefinita definita nel prom
 
 1. Importa il file `N8N-agent-Swineup.json` in n8n
 2. Configura le credenziali richieste:
-   - Google Drive OAuth2 API (ID: "FcCuSrEkOZ65tW8H")
-   - Perplexity API (ID: "SVhXcXC2AgVxGn8A")
-   - OpenAI API (ID: "qsNd2jnBZOYeOwMG")
-   - Telegram API (ID: "NG96mjqJ1hJCYo9F", opzionale per notifiche)
+   - Google Drive OAuth2 API (ID: "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID")
+   - Perplexity API (ID: "YOUR_PERPLEXITY_CREDENTIAL_ID")
+   - OpenAI API (ID: "YOUR_OPENAI_CREDENTIAL_ID")
+   - Telegram API (ID: "YOUR_TELEGRAM_CREDENTIAL_ID", opzionale per notifiche)
 3. Verifica che il file JSON con la lista vini sia accessibile su Google Drive e aggiorna `inputFileId` se necessario
 4. Verifica che la cartella padre (`parentFolderName`) esista nella root del Drive
 5. Configura i parametri nel nodo "Workflow Configuration" se necessario

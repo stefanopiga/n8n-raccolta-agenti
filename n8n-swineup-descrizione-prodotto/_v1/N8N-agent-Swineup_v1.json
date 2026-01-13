@@ -24,7 +24,7 @@
             {
               "id": "id-3",
               "name": "parentFolderName",
-              "value": "Riccardo_Stevanin",
+              "value": "YOUR_PARENT_FOLDER_NAME",
               "type": "string"
             },
             {
@@ -42,7 +42,7 @@
             {
               "id": "id-5",
               "name": "inputFileId",
-              "value": "1akqZBK2-q3bciq6pFHu9Bk0ZQ6q5H1KL",
+              "value": "YOUR_GOOGLE_DRIVE_FILE_ID",
               "type": "string"
             }
           ]
@@ -82,11 +82,11 @@
       "position": [-960, 352],
       "credentials": {
         "googleOAuth2Api": {
-          "id": "FcCuSrEkOZ65tW8H",
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
           "name": "Google Drive account"
         },
         "googleDriveOAuth2Api": {
-          "id": "FcCuSrEkOZ65tW8H",
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
           "name": "Google Drive account"
         }
       }
@@ -128,7 +128,7 @@
       "position": [-544, 352],
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "FcCuSrEkOZ65tW8H",
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
           "name": "Google Drive account"
         }
       }
@@ -205,7 +205,7 @@
       "position": [-48, 544],
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "FcCuSrEkOZ65tW8H",
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
           "name": "Google Drive account"
         }
       }
@@ -305,7 +305,7 @@
       "position": [3152, 384],
       "credentials": {
         "perplexityApi": {
-          "id": "SVhXcXC2AgVxGn8A",
+          "id": "YOUR_PERPLEXITY_CREDENTIAL_ID",
           "name": "Perplexity account 2"
         }
       }
@@ -363,7 +363,7 @@
       "name": "Download file",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "FcCuSrEkOZ65tW8H",
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
           "name": "Google Drive account"
         }
       }
@@ -405,14 +405,14 @@
       "name": "Create file from text",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "FcCuSrEkOZ65tW8H",
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
           "name": "Google Drive account"
         }
       }
     },
     {
       "parameters": {
-        "chatId": "5124355229",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
         "text": "={{ $json.message }}",
         "additionalFields": {}
       },
@@ -421,10 +421,10 @@
       "position": [2384, 368],
       "id": "9acff0fc-3967-4680-9387-6427f5f80a07",
       "name": "messaggio Telegram WF completo",
-      "webhookId": "c2dd1097-e5c5-45c9-85c3-372be03134c5",
+      "webhookId": "YOUR_TELEGRAM_WEBHOOK_ID",
       "credentials": {
         "telegramApi": {
-          "id": "NG96mjqJ1hJCYo9F",
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
           "name": "Telegram account"
         }
       }
@@ -466,7 +466,7 @@
       "position": [672, 528],
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "FcCuSrEkOZ65tW8H",
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
           "name": "Google Drive account"
         }
       }
@@ -599,7 +599,7 @@
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "qsNd2jnBZOYeOwMG",
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
           "name": "OpenAi account"
         }
       }
@@ -947,11 +947,11 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "90aa819b-ce2d-4624-add7-a88f9492e450",
+  "versionId": "YOUR_VERSION_ID",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "c2e1f0fbbf5c598b9fe4f5510781b43b1aa2ea6c1eccfea3fcbdaea2df97a7bd"
+    "instanceId": "YOUR_INSTANCE_ID"
   },
-  "id": "uG9d3TN0eY5y2BJ2",
+  "id": "YOUR_WORKFLOW_ID",
   "tags": []
 }
