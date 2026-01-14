@@ -1,0 +1,957 @@
+{
+  "name": "N8N-agent-Swineup",
+  "nodes": [
+    {
+      "parameters": {
+        "notice": "Click to start the wine description generation workflow"
+      },
+      "id": "e56ab2c6-95a7-4ef1-b138-e25aebf0069f",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-1408, 352]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-2",
+              "name": "templateSheetName",
+              "value": "template_descrizione",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "parentFolderName",
+              "value": "YOUR_PARENT_FOLDER_NAME",
+              "type": "string"
+            },
+            {
+              "id": "id-3b",
+              "name": "outputFolderName",
+              "value": "Descrizioni_2026",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "perplexityModel",
+              "value": "sonar-pro",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "inputFileId",
+              "value": "YOUR_GOOGLE_DRIVE_FILE_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "600ddbb1-cca9-4ca5-a547-c0f026366c94",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-1184, 352]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "=name='{{ $('Workflow Configuration').item.json.parentFolderName }}' and 'root' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d8bcf670-21c6-42ee-a979-8db954b33476",
+      "name": "Find Parent Folder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-960, 352],
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        },
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verifica se la cartella padre è stata trovata\nconst items = $input.all();\n\nif (!items || items.length === 0) {\n  const folderName = $('Workflow Configuration').item.json.parentFolderName;\n  throw new Error('Cartella padre \"' + folderName + '\" non trovata nel Drive. Assicurati che esista nella root del Drive.');\n}\n\n// La risposta di Google Drive può essere in items[0].json o items[0].json.files[]\nlet parentFolder;\nif (items[0].json.files && Array.isArray(items[0].json.files)) {\n  // Risposta con struttura files[]\n  if (items[0].json.files.length === 0) {\n    const folderName = $('Workflow Configuration').item.json.parentFolderName;\n    throw new Error('Cartella padre \"' + folderName + '\" non trovata nel Drive.');\n  }\n  parentFolder = items[0].json.files[0];\n} else {\n  // Risposta diretta\n  parentFolder = items[0].json;\n}\n\nif (!parentFolder || !parentFolder.id) {\n  throw new Error('ID cartella padre non trovato nella risposta');\n}\n\nreturn {\n  json: {\n    parentFolderId: parentFolder.id,\n    parentFolderName: parentFolder.name || $('Workflow Configuration').item.json.parentFolderName\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-736, 352],
+      "id": "dddf8f4e-0dbc-4dc4-a264-b0b491f996f6",
+      "name": "Extract Parent Folder ID"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "=name='{{ $('Workflow Configuration').item.json.outputFolderName }}' and '{{ $json.parentFolderId }}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a55b60ab-4a9c-4172-b59a-17a78de16fe5",
+      "name": "Check Output Folder Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-544, 352],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ ($input.all()[0] && $input.all()[0].json.files && Array.isArray($input.all()[0].json.files)) ? $input.all()[0].json.files.length : $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c4f10e36-8aa4-40b2-a8b1-b0162bb6c976",
+      "name": "IF Folder Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-352, 352]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "outputFolderId",
+              "value": "={{ ($json.files && Array.isArray($json.files) && $json.files.length > 0) ? $json.files[0].id : $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2f6da657-e752-43ee-a2ae-f59d83486ea0",
+      "name": "Use Existing Folder",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-32, 144]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Workflow Configuration').item.json.outputFolderName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Extract Parent Folder ID').item.json.parentFolderId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "53183fba-0860-40d9-b0f0-53f4ffc85966",
+      "name": "Create Output Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [-48, 544],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "outputFolderId",
+              "value": "={{ $json.outputFolderId || $json.id || ($json.files && Array.isArray($json.files) && $json.files.length > 0 ? $json.files[0].id : null) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8c05c50f-3f9f-47e3-9508-191a02f3de29",
+      "name": "Store Folder ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [256, 352]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "cantina",
+              "value": "={{ $json.domain }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "nome_vino",
+              "value": "={{ $json.nome_vino }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "annata",
+              "value": "={{ $json.anno }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "categoria",
+              "value": "={{ $json.litraggio }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "searchQuery",
+              "value": "={{ 'Esegui una ricerca approfondita sul vino ' + ($json.domain || '') + ' ' + ($json.nome_vino || '') + ($json.anno ? ' ' + $json.anno : '') + '. Trova: 1) Storia della cantina e filosofia produttiva (es. biodinamica, lieviti indigeni, metodi tradizionali). 2) Caratteristiche tecniche: vitigni utilizzati, affinamento sui lieviti, dosaggio e uso di solfiti. 3) Note degustative: colore, bouquet (profumi) e sensazioni al palato. 4) 5 abbinamenti gastronomici precisi. 5) 5 occasioni sociali o momenti ideali per berlo.' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "outputFolderId",
+              "value": "={{ $json.outputFolderId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fb6fa1bc-dcfd-4c0e-94f6-bee6e318a646",
+      "name": "Prepare Perplexity Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2976, 384]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "perplexityApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"{{ $('Workflow Configuration').item.json.perplexityModel }}\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.searchQuery }}\"\n    }\n  ],\n  \"temperature\": 0.2,\n  \"return_citations\": true\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "ff63ed9e-8010-4460-a06a-89e4230ff22a",
+      "name": "Call Perplexity API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [3152, 384],
+      "credentials": {
+        "perplexityApi": {
+          "id": "YOUR_PERPLEXITY_CREDENTIAL_ID",
+          "name": "Perplexity account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combina i dati di Perplexity con i dati del vino per mantenerli nel flusso\nconst perplexityData = $input.item.json;\nconst vinoData = $('Prepare Perplexity Request').item.json;\n\n// Combina i dati mantenendo la struttura di Perplexity e aggiungendo i dati del vino\nreturn {\n  json: {\n    ...perplexityData,\n    vino: {\n      domain: vinoData.cantina || vinoData.domain,\n      nome_vino: vinoData.nome_vino,\n      anno: vinoData.annata || vinoData.anno,\n      litraggio: vinoData.categoria || vinoData.litraggio,\n      outputFolderId: vinoData.outputFolderId\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3344, 384],
+      "id": "6226c089-be20-4435-8b9f-4ae061f319b7",
+      "name": "Combine Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "fileId",
+              "value": "={{ $('Workflow Configuration').item.json.inputFileId }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "fileName",
+              "value": "Lista_vini.json",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "afdbd9f3-0a23-4e91-ad69-5c1ecc1e7796",
+      "name": "Extract File ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [400, 32]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.fileId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [560, 32],
+      "id": "d06508ea-360e-4c9d-ad70-e826c63caeb9",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [720, 32],
+      "id": "52955657-972a-40b3-9ae7-49d98ab00f58",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $json.contenuto_md }}",
+        "name": "={{ $json.nome_file }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.folder_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [4320, 384],
+      "id": "116798ed-0e5b-47a0-82d5-5226a1500dab",
+      "name": "Create file from text",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [2384, 368],
+      "id": "9acff0fc-3967-4680-9387-6427f5f80a07",
+      "name": "messaggio Telegram WF completo",
+      "webhookId": "YOUR_TELEGRAM_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validazione e parsing dei dati\n// Supporta sia { data: [...] } che array diretto\nlet vini = [];\nif (Array.isArray($json)) {\n  vini = $json;\n} else if ($json && Array.isArray($json.data)) {\n  vini = $json.data;\n} else if ($json && $json.data && typeof $json.data === 'string') {\n  // Se data è una stringa, prova a parsarla\n  try {\n    const parsed = JSON.parse($json.data);\n    vini = Array.isArray(parsed) ? parsed : [parsed];\n  } catch (e) {\n    throw new Error('Dati JSON non validi: impossibile parsare il campo data');\n  }\n} else {\n  throw new Error('Dati JSON non validi: formato non riconosciuto. Atteso array o oggetto con campo \"data\"');\n}\n\nif (vini.length === 0) {\n  throw new Error('Nessun vino trovato nel file JSON');\n}\n\n// Recupera l'ID della cartella dal nodo Store Folder ID\nconst storeFolderNode = $('Store Folder ID');\nif (!storeFolderNode || !storeFolderNode.item || !storeFolderNode.item.json || !storeFolderNode.item.json.outputFolderId) {\n  throw new Error('ID cartella di output non trovato. Assicurati che la cartella sia stata creata correttamente.');\n}\n\nconst folderId = storeFolderNode.item.json.outputFolderId;\n\n// Validazione campi obbligatori per ogni vino\nconst viniValidi = vini.filter((vino, index) => {\n  if (!vino.domain || !vino.nome_vino) {\n    console.warn(`Vino all'indice ${index} ignorato: campi obbligatori mancanti`);\n    return false;\n  }\n  return true;\n});\n\nif (viniValidi.length === 0) {\n  throw new Error('Nessun vino valido trovato dopo la validazione');\n}\n\n// Restituisci ogni vino come item separato con l'ID della cartella\nreturn viniValidi.map(vino => ({ \n  json: {\n    ...vino,\n    outputFolderId: folderId\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [896, 32],
+      "id": "e973326e-3fbd-4c9e-b9d1-ea65132f4992",
+      "name": "Estrae primo prodotto"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "='{{ $('Store Folder ID').item.json.outputFolderId }}' in parents and name contains '.md' and trashed=false"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a82dc5fa-d1af-4f93-9f13-7c1f9842d5ac",
+      "name": "Get Existing Files",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [672, 528],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filtra i vini escludendo quelli che hanno già il file di descrizione esistente\n// I dati arrivano dal Merge: items da Estrae primo prodotto e item da Get Existing Files\nconst allItems = $input.all();\n\n// Separa i vini dai file esistenti\nlet allVini = [];\nlet existingFilesResponse = null;\n\nfor (const item of allItems) {\n  // I file esistenti hanno la struttura della risposta Google Drive API\n  if (item.json.files && Array.isArray(item.json.files)) {\n    existingFilesResponse = item.json;\n  } else if (item.json.domain || item.json.nome_vino) {\n    // È un vino\n    allVini.push(item);\n  }\n}\n\nif (allVini.length === 0) {\n  throw new Error('Nessun vino trovato nel merge');\n}\n\n// Estrae i nomi dei file esistenti dalla risposta di Google Drive\nlet existingFileNames = [];\nif (existingFilesResponse && existingFilesResponse.files && Array.isArray(existingFilesResponse.files)) {\n  existingFileNames = existingFilesResponse.files.map(file => (file.name || '').toLowerCase().trim()).filter(name => name);\n}\n\nconsole.log('File esistenti trovati: ' + existingFileNames.length);\n\n// Funzione per generare il nome file atteso per un vino\nfunction getExpectedFileName(vino) {\n  const domain = (vino.domain || '').trim();\n  const nomeVino = (vino.nome_vino || '').trim();\n  const anno = (vino.anno || '').trim();\n  const litraggio = (vino.litraggio || '').trim();\n  \n  if (!domain || !nomeVino) {\n    return null;\n  }\n  \n  const annoPart = anno ? '_' + anno : '';\n  const litriPart = litraggio ? '_' + litraggio : '';\n  \n  return (domain + '_' + nomeVino + annoPart + litriPart + '.md').toLowerCase().trim();\n}\n\n// Filtra i vini che non hanno ancora il file\nconst viniDaProcessare = allVini.filter(item => {\n  const vino = item.json;\n  const expectedFileName = getExpectedFileName(vino);\n  \n  if (!expectedFileName) {\n    // Se non può generare il nome file, include comunque (per gestire errori)\n    return true;\n  }\n  \n  // Verifica se il file esiste già\n  const fileExists = existingFileNames.includes(expectedFileName);\n  \n  if (fileExists) {\n    const vinoInfo = vino.domain + ' ' + vino.nome_vino + ' ' + (vino.anno || '') + ' ' + (vino.litraggio || '');\n    console.log('File già esistente per ' + vinoInfo + ' - Saltato');\n  }\n  \n  return !fileExists;\n});\n\nif (viniDaProcessare.length === 0) {\n  console.log('Tutti i vini hanno già le descrizioni generate. Nessun file da processare.');\n  // Restituisce un array vuoto - il workflow andrà al ramo FALSE di Check Empty Array\n  return [];\n}\n\nconsole.log(viniDaProcessare.length + ' vini da processare su ' + allVini.length + ' totali');\n\n// Restituisce solo i vini da processare\nreturn viniDaProcessare;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1312, 48],
+      "id": "20d45503-44ce-444c-84ea-b8b0f08f0c0d",
+      "name": "Filter Existing Files"
+    },
+    {
+      "parameters": {},
+      "id": "7017ebe8-1050-47ce-acb0-6c5d02e00fb3",
+      "name": "Merge Files Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1088, 48]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5aaa221e-3579-42bd-b58a-c364035bfca5",
+      "name": "Check Empty Array",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1520, 48]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gestisce il caso in cui tutti i vini hanno già i file generati\n// Questo nodo viene eseguito quando Check Empty Array restituisce FALSE (array vuoto)\nconst outputFolderName = $('Workflow Configuration').item.json.outputFolderName || 'cartella di output';\n\nreturn {\n  json: {\n    totalFiles: 0,\n    fileNames: '',\n    outputFolderName: outputFolderName,\n    message: 'ℹ️ **Workflow Completato**\\n\\n✅ Tutti i vini hanno già le descrizioni generate.\\n\\n📁 Cartella: ' + outputFolderName + '\\n\\nNessun nuovo file da creare.'\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1888, 256],
+      "id": "1005aeca-919e-4f7b-b3f7-024e2134fdfc",
+      "name": "Prepare Empty Message"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "7e429e6d-688a-4b3f-bbdc-e334710c77e9",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1840, -48]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Raccoglie tutti i vini processati e prepara il messaggio finale\n// Questo nodo viene eseguito quando Split In Batches completa tutti i batch (output 'done')\n// Quando Split In Batches completa, passa gli items originali senza paired items\n// Recuperiamo i dati originali dal nodo 'Filter Existing Files' che contiene tutti i vini da processare\ntry {\n  // Prova a recuperare i dati dal nodo Filter Existing Files che contiene tutti i vini originali\n  const filterNode = $('Filter Existing Files');\n  let allVini = [];\n  \n  if (filterNode && filterNode.all && filterNode.all().length > 0) {\n    // Usa i dati dal nodo Filter Existing Files\n    allVini = filterNode.all().map(item => item.json);\n  } else {\n    // Fallback: prova a usare gli items di input se disponibili\n    const inputItems = $input.all();\n    if (inputItems && inputItems.length > 0) {\n      allVini = inputItems.map(item => item.json);\n    }\n  }\n  \n  const totalFiles = allVini.length;\n  \n  if (totalFiles === 0) {\n    throw new Error('Nessun vino processato');\n  }\n  \n  // Costruisce i nomi dei file creati basandosi sui dati dei vini processati\n  // Il formato del nome file è: domain_nome_vino_anno_litraggio.md\n  const fileNames = allVini.map(vino => {\n    if (!vino.domain || !vino.nome_vino) {\n      return 'File sconosciuto';\n    }\n    \n    const anno = vino.anno ? '_' + vino.anno : '';\n    const litri = vino.litraggio ? '_' + vino.litraggio : '';\n    \n    return vino.domain + '_' + vino.nome_vino + anno + litri + '.md';\n  }).join('\\n- ');\n  \n  // Recupera il nome della cartella di output\n  const outputFolderName = $('Workflow Configuration').item.json.outputFolderName || 'cartella di output';\n  \n  return {\n    json: {\n      totalFiles: totalFiles,\n      fileNames: fileNames,\n      outputFolderName: outputFolderName,\n      message: '🚀 **Descrizioni SwineUp Pronte su Drive**\\n\\n✅ ' + totalFiles + ' descrizioni generate con successo!\\n\\n📁 Cartella: ' + outputFolderName + '\\n\\n📄 File creati:\\n- ' + fileNames\n    }\n  };\n} catch (error) {\n  // Se c'è un errore, restituisce un messaggio generico\n  const outputFolderName = $('Workflow Configuration').item.json.outputFolderName || 'cartella di output';\n  return {\n    json: {\n      totalFiles: 0,\n      fileNames: '',\n      outputFolderName: outputFolderName,\n      message: '🚀 **Descrizioni SwineUp Pronte su Drive**\\n\\n✅ Workflow completato con successo!\\n\\n📁 Cartella: ' + outputFolderName + '\\n\\n(Impossibile recuperare l\\'elenco completo dei file creati)'\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2144, 128],
+      "id": "241241d9-685a-46e2-98af-8fc8d0c589f5",
+      "name": "Prepare Final Message"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Estrae il testo generato da Gemini\n// Gestisce sia output come stringa diretta che struttura annidata\nlet rawHTML = null;\nconst output = $input.item.json.output;\n\nif (typeof output === 'string') {\n  // Output è già una stringa\n  rawHTML = output;\n} else if (output && Array.isArray(output) && output[0] && output[0].content && Array.isArray(output[0].content) && output[0].content[0]) {\n  // Struttura annidata: output[0].content[0].text\n  rawHTML = output[0].content[0].text;\n} else if (output && output.text) {\n  // Struttura con campo text diretto\n  rawHTML = output.text;\n} else {\n  throw new Error('Risposta del modello non valida: struttura dati inattesa. Output ricevuto: ' + JSON.stringify(output).substring(0, 200));\n}\n\nif (!rawHTML || typeof rawHTML !== 'string') {\n  throw new Error('Contenuto HTML non valido o vuoto');\n}\n\n// 2. Pulizia: Rimuove i tag strutturali pesanti mantenendo intatta la formattazione interna (em, strong, span)\nlet cleanHTML = rawHTML\n  .replace(/<!DOCTYPE html>|<\\/?html.*?>|<\\/?head>|<\\/?body>|<meta.*?>|<title>.*?<\\/title>/gi, '')\n  .trim();\n\n// 3. Recupera i dati del vino dall'item corrente (passati attraverso Combine Data)\nconst currentItem = $input.item.json;\nconst vino = currentItem.vino;\n\nif (!vino || !vino.domain || !vino.nome_vino) {\n  throw new Error('Dati vino incompleti: domain o nome_vino mancanti');\n}\n\nconst anno = vino.anno ? `_${vino.anno}` : '';\nconst litri = vino.litraggio ? `_${vino.litraggio}` : '';\n\n// 4. Recupera l'ID della cartella\nconst folderId = vino.outputFolderId;\n\nif (!folderId) {\n  throw new Error('ID cartella di output non trovato nell\\'item corrente');\n}\n\nreturn {\n  nome_file: `${vino.domain}_${vino.nome_vino}${anno}${litri}.md`,\n  contenuto_md: cleanHTML,\n  folder_id: folderId\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4112, 384],
+      "id": "9e3b6803-2853-4f77-a76e-38ff7d98ba41",
+      "name": "Pulizia+Formattazione Testo"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sei un sommelier esperto e un copywriter di lusso. Il tuo compito è generare una descrizione tecnica ed emozionale seguendo RIGOROSAMENTE la struttura HTML del template fornito. Restituisci SOLO il contenuto HTML partendo da <h2>.\n\nSTRUTTURA DA CLONARE (RISPETTA L'ORDINE):\n1. Titolo: <h2>[Nome Cantina] - [Nome Vino] [Anno]</h2>\n\n2. Introduzione: <p><strong>[Nome Vino]</strong> nasce da... [Descrivi vitigno, lieu-dit e filosofia produttiva]</p>\n\n3. Tecnica: <p>[Dettagli fermentazione, uso del legno, permanenza sui lieviti e gestione dei solfiti]</p>\n\n4. Esame Organolettico: 4 paragrafi <p> distinti che iniziano con: (Vista), (Bouquet), (Palato), (Equilibrio e Potenziale di invecchiamento).</p>\n\n5. Sintesi: <p>[Paragrafo che riassume l'identità territoriale e l'eleganza del prodotto].</p>\n\n6. Sezioni Liste: \n   <h3>🎁 IDEALE PER:</h3>\n   [Genera 5 punti elenco nel formato indicato al punto 8]\n   \n   <h3>🎁 ABBINAMENTI GASTRONOMICI:</h3>\n   [Genera 5 punti elenco nel formato indicato al punto 8]\n\n7. FRASE EVOCATIVA (CHIUSURA OBBLIGATORIA): \n   Deve essere l'ULTIMO paragrafo del documento, posizionato dopo l'ultimo punto elenco degli abbinamenti.\n   Deve essere un paragrafo unico, SENZA virgolette, scritto interamente in corsivo.\n   Formato: <p><em>[Inserisci qui una frase poetica e magnetica personalizzata per il vino. Esempio: \"Purezza cristallina, mineralità profonda: l'essenza di Avize in un Blanc de Blancs senza tempo.\"].</em></p>\n\n8. Punti elenco (Formato fisso per le liste): \n   <p>✨ <span style=\"color: inherit; font-size: 1rem;\">[Testo breve e accattivante]</span></p>\n\nDATI DI INPUT:\n- Cantina: {{ $json.vino.domain }}\n- Vino: {{ $json.vino.nome_vino }}\n- Anno: {{ $json.vino.anno }}\n- Ricerca Tecnica (Perplexity): {{ $json.choices[0].message.content }}\n\nNOTE IMPORTANTI:\n- La frase evocativa deve essere la chiusura finale del file, come nel template di riferimento.\n- NON usare virgolette nella frase evocativa.\n- NON aggiungere tag <html> o <body>.\n- Assicurati che ogni tag <span> e <em> sia chiuso correttamente.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [3568, 384],
+      "id": "1690175d-1a07-4e3f-b439-c71677344ac5",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combina l'output di AI Agent con i dati del vino\n// I dati del vino sono già presenti nell'item corrente passato da Combine Data\nconst aiOutput = $input.item.json;\n\n// I dati del vino dovrebbero essere già presenti nell'output di Combine Data\n// Se non ci sono, prova a recuperarli dal nodo precedente\nlet vino = null;\n\nif (aiOutput.vino) {\n  vino = aiOutput.vino;\n} else {\n  // Fallback: recupera dal nodo Combine Data usando l'index corrente\n  const combineNode = $('Combine Data');\n  const currentIndex = $input.item.index || 0;\n  \n  if (combineNode && combineNode.all && combineNode.all().length > currentIndex) {\n    const combineItem = combineNode.all()[currentIndex];\n    if (combineItem && combineItem.json && combineItem.json.vino) {\n      vino = combineItem.json.vino;\n    }\n  }\n}\n\nif (!vino) {\n  throw new Error('Dati vino non trovati nel flusso. Assicurati che Combine Data passi correttamente i dati del vino.');\n}\n\n// Combina l'output di AI Agent con i dati del vino\nreturn {\n  json: {\n    ...aiOutput,\n    vino: vino\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3872, 384],
+      "id": "dabd611b-8d89-4370-b06a-3e715aec5d65",
+      "name": "Combine AI Output"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [3488, 608],
+      "id": "8a14f869-df80-47b3-aad5-59fdeb675f58",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Find Parent Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Parent Folder": {
+      "main": [
+        [
+          {
+            "node": "Extract Parent Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Parent Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Check Output Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Output Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "IF Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "Use Existing Folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Output Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing Folder": {
+      "main": [
+        [
+          {
+            "node": "Store Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Output Folder": {
+      "main": [
+        [
+          {
+            "node": "Store Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Perplexity Request": {
+      "main": [
+        [
+          {
+            "node": "Call Perplexity API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Perplexity API": {
+      "main": [
+        [
+          {
+            "node": "Combine Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract File ID": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Estrae primo prodotto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Extract File ID",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Existing Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Existing Files": {
+      "main": [
+        [
+          {
+            "node": "Merge Files Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Estrae primo prodotto": {
+      "main": [
+        [
+          {
+            "node": "Merge Files Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Files Data": {
+      "main": [
+        [
+          {
+            "node": "Filter Existing Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Existing Files": {
+      "main": [
+        [
+          {
+            "node": "Check Empty Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Empty Array": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Empty Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Prepare Final Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Perplexity Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pulizia+Formattazione Testo": {
+      "main": [
+        [
+          {
+            "node": "Create file from text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create file from text": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Final Message": {
+      "main": [
+        [
+          {
+            "node": "messaggio Telegram WF completo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Empty Message": {
+      "main": [
+        [
+          {
+            "node": "messaggio Telegram WF completo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Combine AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine AI Output": {
+      "main": [
+        [
+          {
+            "node": "Pulizia+Formattazione Testo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "YOUR_VERSION_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "YOUR_WORKFLOW_ID",
+  "tags": []
+}

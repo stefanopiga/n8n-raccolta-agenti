@@ -1,0 +1,3905 @@
+{
+  "name": "N8N-agent-Swineup_v4",
+  "nodes": [
+    {
+      "parameters": {
+        "notice": "Click to start the wine description generation workflow"
+      },
+      "id": "d560bf63-fd46-480b-994e-cba2b7cb0873",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -42752,
+        7456
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-2",
+              "name": "templateSheetName",
+              "value": "template_descrizione_PRODOTTO",
+              "type": "string"
+            },
+            {
+              "id": "id-2b",
+              "name": "templateDomainName",
+              "value": "template_descrizione_DOMAIN",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "parentFolderName",
+              "value": "YOUR_PARENT_FOLDER_NAME",
+              "type": "string"
+            },
+            {
+              "id": "id-3b",
+              "name": "outputFolderName",
+              "value": "descrizioni_2026",
+              "type": "string"
+            },
+            {
+              "id": "id-3c",
+              "name": "domainDescriptionsFolderName",
+              "value": "descrizioni-DOMAIN",
+              "type": "string"
+            },
+            {
+              "id": "e1ced9d5-b518-424a-9542-65e5423e35f6",
+              "name": "ProductDescriptionsFolderName",
+              "value": "descrizioni-PRODOTTO",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "perplexityModel",
+              "value": "sonar-pro",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "inputFileId",
+              "value": "YOUR_GOOGLE_DRIVE_FILE_ID",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "itaFolderName",
+              "value": "ITA",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "engFolderName",
+              "value": "ENG",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7d26319c-76eb-491d-b719-3672b90e997d",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -42528,
+        7456
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ 'name=\\'' + $('Workflow Configuration').first().json.parentFolderName + '\\' and \\'root\\' in parents and mimeType=\\'application/vnd.google-apps.folder\\' and trashed=false' }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f448ac1d-b864-4699-bec5-26551edd1e0c",
+      "name": "Find Parent Folder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -42304,
+        7456
+      ],
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        },
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verifica se la cartella padre è stata trovata\nconst items = $input.all();\n\nif (!items || items.length === 0) {\n  const folderName = $('Workflow Configuration').first().json.parentFolderName;\n  throw new Error('Cartella padre \"' + folderName + '\" non trovata nel Drive. Assicurati che esista nella root del Drive.');\n}\n\n// La risposta di Google Drive può essere in items[0].json o items[0].json.files[]\nlet parentFolder;\nif (items[0].json.files && Array.isArray(items[0].json.files)) {\n  // Risposta con struttura files[]\n  if (items[0].json.files.length === 0) {\n    const folderName = $('Workflow Configuration').first().json.parentFolderName;\n    throw new Error('Cartella padre \"' + folderName + '\" non trovata nel Drive.');\n  }\n  parentFolder = items[0].json.files[0];\n} else {\n  // Risposta diretta\n  parentFolder = items[0].json;\n}\n\nif (!parentFolder || !parentFolder.id) {\n  throw new Error('ID cartella padre non trovato nella risposta');\n}\n\nreturn {\n  json: {\n    parentFolderId: parentFolder.id,\n    parentFolderName: parentFolder.name || $('Workflow Configuration').first().json.parentFolderName\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -42080,
+        7456
+      ],
+      "id": "4a9635af-707f-4476-974c-7cceb6501fdd",
+      "name": "Extract Parent Folder ID"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ 'name=\\'' + $('Workflow Configuration').first().json.outputFolderName + '\\' and \\'' + $('Extract Parent Folder ID').item.json.parentFolderId + '\\' in parents and mimeType=\\'application/vnd.google-apps.folder\\' and trashed=false' }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ab4870e8-8c39-4933-ac00-fa079af83113",
+      "name": "Check Output Folder Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -41856,
+        7456
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ ($input.all()[0] && $input.all()[0].json.files && Array.isArray($input.all()[0].json.files)) ? $input.all()[0].json.files.length : $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "233572a8-c70a-43f7-a631-f781eeb884fc",
+      "name": "IF Folder Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -41632,
+        7456
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "outputFolderId",
+              "value": "={{ ($json.files && Array.isArray($json.files) && $json.files.length > 0) ? $json.files[0].id : $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e0bda05c-b136-49d1-ac13-13c346b5842f",
+      "name": "Use Existing Folder",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -41408,
+        7232
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Workflow Configuration').first().json.outputFolderName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Extract Parent Folder ID').item.json.parentFolderId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "d823b70c-8d8f-4830-9fae-bf8fd540197d",
+      "name": "Create Output Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -41408,
+        7712
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "outputFolderId",
+              "value": "={{ $json.outputFolderId || $json.id || ($json.files && Array.isArray($json.files) && $json.files.length > 0 ? $json.files[0].id : null) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e0453af1-0d28-4adf-802e-ff019e2ee797",
+      "name": "Store Folder ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -41184,
+        7456
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "cantina",
+              "value": "={{ $json.domain }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "nome_vino",
+              "value": "={{ $json.nome_vino }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "annata",
+              "value": "={{ $json.anno }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "categoria",
+              "value": "={{ $json.litraggio }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "searchQuery",
+              "value": "={{ 'Ricerca approfondita: ' + ($json.domain || '') + ' ' + ($json.nome_vino || '') + ($json.anno ? ' ' + $json.anno : '') + '. Trova: 1) Vitigni e vinificazione. 2) Affinamento e dosaggio. 3) Note degustative. 4) 5 abbinamenti. 5) 5 occasioni.' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "outputFolderId",
+              "value": "={{ $json.outputFolderId }}",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "productFolderId",
+              "value": "={{ $json.productFolderId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5870988f-8048-4c09-a779-8690ce6a695f",
+      "name": "Prepare Perplexity Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -36032,
+        8368
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "perplexityApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Workflow Configuration').first().json.perplexityModel, messages: [{ role: 'user', content: $json.searchQuery }], temperature: 0.2, return_citations: true } }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "ee23d811-a1b2-4477-8d1a-8502f1a4b0e1",
+      "name": "Call Perplexity API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -35808,
+        8368
+      ],
+      "credentials": {
+        "perplexityApi": {
+          "id": "YOUR_PERPLEXITY_CREDENTIAL_ID",
+          "name": "Perplexity account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.item.json;\nconst vinoData = $('Prepare Perplexity Request').item.json;\n\nlet responseContent = null;\nif (inputData.body && inputData.body.choices && inputData.body.choices[0] && inputData.body.choices[0].message) {\n  responseContent = inputData.body.choices[0].message.content;\n} else if (inputData.choices && inputData.choices[0] && inputData.choices[0].message) {\n  responseContent = inputData.choices[0].message.content;\n}\n\nreturn {\n  json: {\n    ...inputData,\n    cantina_research: vinoData.cantina_research || null,\n    vino: {\n      domain: vinoData.cantina || vinoData.domain,\n      nome_vino: vinoData.nome_vino,\n      anno: vinoData.annata || vinoData.anno,\n      litraggio: vinoData.categoria || vinoData.litraggio,\n      outputFolderId: vinoData.outputFolderId,\n      productFolderId: vinoData.productFolderId\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -34560,
+        8368
+      ],
+      "id": "93be4895-a4a9-45ae-a492-2f2e61b4f9d4",
+      "name": "Combine Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "fileId",
+              "value": "={{ $('Workflow Configuration').first().json.inputFileId }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "fileName",
+              "value": "Lista_vini.json",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bbfc40ba-19a2-426b-9ccd-5a56ac3f35c9",
+      "name": "Extract File ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -39168,
+        7856
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.fileId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -38944,
+        7856
+      ],
+      "id": "53c4a5ad-1b72-49c2-96d9-e2215267a0e1",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -38720,
+        7856
+      ],
+      "id": "73a497ab-a355-462a-904a-869f5c611635",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $json.contenuto_md }}",
+        "name": "={{ $json.nome_file }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.folder_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -33536,
+        8368
+      ],
+      "id": "fdb75ee7-aa5a-43ae-9314-1447e74f15b6",
+      "name": "Create file from text",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "5124355229",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -34560,
+        7280
+      ],
+      "id": "b90c5b4f-6649-4542-a903-8a58fb85aead",
+      "name": "messaggio Telegram WF completo",
+      "webhookId": "7e4f4a79-3a55-4912-a392-f90ce6cf96d8",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validazione e parsing dei dati\n// Supporta sia { data: [...] } che array diretto\nlet vini = [];\nif (Array.isArray($json)) {\n  vini = $json;\n} else if ($json && Array.isArray($json.data)) {\n  vini = $json.data;\n} else if ($json && $json.data && typeof $json.data === 'string') {\n  // Se data è una stringa, prova a parsarla\n  try {\n    const parsed = JSON.parse($json.data);\n    vini = Array.isArray(parsed) ? parsed : [parsed];\n  } catch (e) {\n    throw new Error('Dati JSON non validi: impossibile parsare il campo data');\n  }\n} else {\n  throw new Error('Dati JSON non validi: formato non riconosciuto. Atteso array o oggetto con campo \"data\"');\n}\n\nif (vini.length === 0) {\n  throw new Error('Nessun vino trovato nel file JSON');\n}\n\n// Recupera l'ID della cartella di output (root) dal nodo Store Folder ID\nconst storeFolderNode = $('Store Folder ID');\nif (!storeFolderNode || !storeFolderNode.item || !storeFolderNode.item.json || !storeFolderNode.item.json.outputFolderId) {\n  throw new Error('ID cartella di output non trovato. Assicurati che la cartella sia stata creata correttamente.');\n}\nconst rootFolderId = storeFolderNode.item.json.outputFolderId;\n\n// Validazione campi obbligatori per ogni vino\nconst viniValidi = vini.filter((vino, index) => {\n  if (!vino.domain || !vino.nome_vino) {\n    console.warn(`Vino all'indice ${index} ignorato: campi obbligatori mancanti`);\n    return false;\n  }\n  return true;\n});\n\nif (viniValidi.length === 0) {\n  throw new Error('Nessun vino valido trovato dopo la validazione');\n}\n\n// Restituisci ogni vino come item separato con l'ID cartella root\n// productFolderId verrà aggiunto successivamente dal nodo Store Product Folder ID\nreturn viniValidi.map(vino => ({\n  json: {\n    ...vino,\n    outputFolderId: rootFolderId\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -38496,
+        7856
+      ],
+      "id": "2f320163-63d3-490f-aafd-e78322814041",
+      "name": "Estrae primo prodotto"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ '\\'' + $('Store Product Folder ID').first().json.productFolderId + '\\' in parents and name contains \\'.md\\' and trashed=false' }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e87827ac-6aa0-4637-aed3-3aa2d4dab114",
+      "name": "Get Existing Files",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -38496,
+        8576
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle append mode: product items and file list come as separate items\nconst allItems = $input.all();\nlet allVini = [];\nlet existingFilesResponse = null;\n\n// Separate product items from file list response\nfor (const item of allItems) {\n  if (item.json.files && Array.isArray(item.json.files)) {\n    // This is the file list from Get Existing Files\n    existingFilesResponse = item.json;\n  } else if (item.json.domain || item.json.nome_vino) {\n    // This is a product item from Estrae primo prodotto\n    allVini.push(item);\n  }\n}\n\nfunction generateExpectedFileName(vino) {\n  const domain = (vino.domain || '').trim();\n  const nome_vino = (vino.nome_vino || '').trim();\n  const anno = vino.anno ? `_${vino.anno}` : '';\n  const litri = vino.litraggio ? `_${vino.litraggio}` : '';\n  return `${domain}_${nome_vino}${anno}${litri}.md`.toLowerCase();\n}\n\nfunction normalizeFileName(fileName) {\n  return (fileName || '').replace(/\\.md$/i, '').toLowerCase().trim();\n}\n\n// Build set of existing file names (normalized without .md extension)\nlet existingFileNames = new Set();\nlet existingFilesArray = [];\nif (existingFilesResponse && existingFilesResponse.files) {\n  existingFilesArray = existingFilesResponse.files;\n  existingFilesResponse.files.forEach(f => {\n    const normalized = normalizeFileName(f.name);\n    if (normalized) {\n      existingFileNames.add(normalized);\n    }\n  });\n}\n\n// Filter out products that already have files\nconst nuoviVini = allVini.filter(item => {\n  const v = item.json;\n  if (!v.domain || !v.nome_vino) {\n    return false;\n  }\n  const expectedFileName = generateExpectedFileName(v);\n  const expectedNormalized = normalizeFileName(expectedFileName);\n  \n  // Debug logging\n  console.log('Checking product:', {\n    domain: v.domain,\n    nome_vino: v.nome_vino,\n    anno: v.anno,\n    litraggio: v.litraggio,\n    expectedFileName: expectedFileName,\n    expectedNormalized: expectedNormalized,\n    exists: existingFileNames.has(expectedNormalized)\n  });\n  \n  return !existingFileNames.has(expectedNormalized);\n});\n\n// Debug: log summary\nconsole.log('Filter summary:', {\n  totalProducts: allVini.length,\n  existingFiles: existingFilesArray.length,\n  existingFileNames: Array.from(existingFileNames),\n  newProductsToProcess: nuoviVini.length\n});\n\n// If no new products to process, return empty flag with existing files info\nif (nuoviVini.length === 0) {\n  return [{ json: { isEmpty: true, existingFiles: existingFilesArray.map(f => f.name).filter(Boolean), existingFilesCount: existingFilesArray.length } }];\n}\n\n// Return new products to process\nreturn nuoviVini.map(item => ({ json: { ...item.json } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -38048,
+        8576
+      ],
+      "id": "57d3f8b7-2177-41c9-aa1b-53717608bcff",
+      "name": "Filter Existing Files"
+    },
+    {
+      "parameters": {},
+      "id": "62ee68de-d96b-4ecd-9d02-aefc20f24dc1",
+      "name": "Merge Files Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -38272,
+        8576
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ $input.all().length > 0 && !$input.all()[0].json.isEmpty }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3ebfc71d-144b-41dc-a866-c517fd7cf420",
+      "name": "Check Empty Array",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -36704,
+        8576
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gestisce il caso in cui tutti i vini hanno già i file generati\n// I file esistenti sono passati direttamente da Filter Existing Files\nconst outputFolderName = $('Workflow Configuration').first().json.outputFolderName || 'cartella di output';\n\n// Recupera i file esistenti dall'input (passati da Filter Existing Files)\nlet existingFiles = [];\nconst inputData = $json || {};\n\n// Prima prova a usare i dati passati direttamente\nif (inputData.existingFiles && Array.isArray(inputData.existingFiles)) {\n  existingFiles = inputData.existingFiles;\n} else {\n  // Fallback: recupera da Get Existing Files\n  try {\n    const getExistingFilesNode = $('Get Existing Files');\n    if (getExistingFilesNode && getExistingFilesNode.first()) {\n      const response = getExistingFilesNode.first().json;\n      if (response && response.files && Array.isArray(response.files)) {\n        existingFiles = response.files.map(f => f.name).filter(Boolean);\n      }\n    }\n  } catch (e) {\n    console.log('Impossibile recuperare file esistenti: ' + e.message);\n  }\n}\n\nconst existingFilesCount = existingFiles.length;\nconst existingFileNames = existingFiles.join('\\n- ');\n\nreturn {\n  json: {\n    totalFiles: 0,\n    fileNames: '',\n    existingFilesCount: existingFilesCount,\n    existingFileNames: existingFileNames,\n    outputFolderName: outputFolderName\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -36032,
+        8832
+      ],
+      "id": "cae1012e-aa92-410c-8d47-eca01e8af2b4",
+      "name": "Prepare Empty Message"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f945a6cb-1ad4-4a6e-8798-4efd1da150a1",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -36256,
+        8400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Raccoglie tutti i vini processati e prepara il messaggio finale\n// Questo nodo viene eseguito quando Split In Batches completa tutti i batch (output 'done')\ntry {\n  const filterNode = $('Filter Existing Files');\n  let allVini = [];\n  \n  if (filterNode && filterNode.all && filterNode.all().length > 0) {\n    allVini = filterNode.all().map(item => item.json);\n  } else {\n    const inputItems = $input.all();\n    if (inputItems && inputItems.length > 0) {\n      allVini = inputItems.map(item => item.json);\n    }\n  }\n  \n  const totalFiles = allVini.length;\n  \n  if (totalFiles === 0) {\n    throw new Error('Nessun vino processato');\n  }\n  \n  const fileNames = allVini.map(vino => {\n    if (!vino.domain || !vino.nome_vino) return 'File sconosciuto';\n    const anno = vino.anno ? '_' + vino.anno : '';\n    const litri = vino.litraggio ? '_' + vino.litraggio : '';\n    return vino.domain + '_' + vino.nome_vino + anno + litri + '.md';\n  }).join('\\n- ');\n  \n  const outputFolderName = $('Workflow Configuration').first().json.outputFolderName || 'cartella di output';\n  \n  // Recupera anche i file esistenti per il resoconto completo\n  let existingFiles = [];\n  try {\n    const getExistingFilesNode = $('Get Existing Files');\n    if (getExistingFilesNode && getExistingFilesNode.first()) {\n      const response = getExistingFilesNode.first().json;\n      if (response && response.files && Array.isArray(response.files)) {\n        existingFiles = response.files.map(f => f.name).filter(Boolean);\n      }\n    }\n  } catch (e) {}\n  \n  return {\n    json: {\n      totalFiles: totalFiles,\n      fileNames: fileNames,\n      existingFilesCount: existingFiles.length,\n      existingFileNames: existingFiles.join('\\n- '),\n      outputFolderName: outputFolderName\n    }\n  };\n} catch (error) {\n  const outputFolderName = $('Workflow Configuration').first().json.outputFolderName || 'cartella di output';\n  return {\n    json: {\n      totalFiles: 0,\n      fileNames: '',\n      existingFilesCount: 0,\n      existingFileNames: '',\n      outputFolderName: outputFolderName\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -36032,
+        8128
+      ],
+      "id": "deb22ea9-1fa2-42d2-9a95-0e76d149476b",
+      "name": "Prepare Final Message"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Estrae il testo generato dal modello\nlet rawHTML = null;\nconst output = ($input.item.json || {}).output;\n\nif (typeof output === 'string') {\n  rawHTML = output;\n} else if (output && Array.isArray(output) && output[0] && output[0].content && Array.isArray(output[0].content) && output[0].content[0]) {\n  rawHTML = output[0].content[0].text;\n} else if (output && output.text) {\n  rawHTML = output.text;\n} else {\n  throw new Error('Risposta del modello non valida: struttura dati inattesa. Output ricevuto: ' + JSON.stringify(output).substring(0, 200));\n}\n\nif (!rawHTML || typeof rawHTML !== 'string') {\n  throw new Error('Contenuto HTML non valido o vuoto');\n}\n\n// 2. Pulizia: Rimuove i tag strutturali pesanti mantenendo intatta la formattazione interna (em, strong, span)\nlet cleanHTML = rawHTML\n  .replace(/<!DOCTYPE html>|<\\/?html.*?>|<\\/?head>|<\\/?body>|<meta.*?>|<title>.*?<\\/title>/gi, '')\n  .trim();\n\n// 3. Recupera i dati del vino: currentItem.vino + fallback su Split In Batches (più stabile nei loop)\nconst currentItem = $input.item.json || {};\nconst batchNode = $('Split In Batches');\nconst batchItem = (batchNode && batchNode.item && batchNode.item.json) ? batchNode.item.json : {};\n\nlet vino = currentItem.vino || {};\n\nvino = {\n  domain: vino.domain || batchItem.domain || currentItem.domain || null,\n  nome_vino: vino.nome_vino || batchItem.nome_vino || currentItem.nome_vino || null,\n  anno: vino.anno || batchItem.anno || currentItem.anno || null,\n  litraggio: vino.litraggio || batchItem.litraggio || currentItem.litraggio || null,\n  outputFolderId: vino.outputFolderId || batchItem.outputFolderId || currentItem.outputFolderId || null,\n  productFolderId: vino.productFolderId || batchItem.productFolderId || currentItem.productFolderId || null\n};\n\n// Fallback: estrai domain/nome_vino/anno dall'<h2>\nif (!vino.nome_vino || !vino.domain || !vino.anno) {\n  const m = rawHTML.match(/<h2>\\s*([^<]+?)\\s*-\\s*([^<]+?)(?:\\s+(\\d{4}))?\\s*<\\/h2>/i);\n  if (m) {\n    vino.domain = vino.domain || (m[1] || '').trim() || null;\n    vino.nome_vino = vino.nome_vino || (m[2] || '').trim() || null;\n    vino.anno = vino.anno || (m[3] || '').trim() || null;\n  }\n}\n\nif (!vino.domain || !vino.nome_vino) {\n  throw new Error('Dati vino incompleti: domain o nome_vino mancanti');\n}\n\n// 4. Genera il nome file nel formato esatto: domain_nome_vino_anno_litraggio.md\nconst anno = vino.anno ? `_${vino.anno}` : '';\nconst litri = vino.litraggio ? `_${vino.litraggio}` : '';\nconst fileName = `${vino.domain}_${vino.nome_vino}${anno}${litri}.md`;\n\n// 5. Recupera l'ID della cartella (preferisce sottocartella PRODOTTO)\nlet folderId = vino.productFolderId || vino.outputFolderId;\n\n// Fallback finale: usa gli ID creati a inizio workflow\nif (!folderId) {\n  try {\n    folderId = $('Store Product Folder ID').first().json.productFolderId || $('Store Folder ID').first().json.outputFolderId;\n  } catch (e) {}\n}\n\nif (!folderId) {\n  throw new Error('ID cartella di output non trovato');\n}\n\nreturn {\n  nome_file: fileName,\n  contenuto_md: cleanHTML,\n  folder_id: folderId\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -33760,
+        8368
+      ],
+      "id": "fde5aa47-6da5-4454-85ec-6e11fad9136d",
+      "name": "Pulizia+Formattazione Testo"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=STRUTTURA DA CLONARE (RISPETTA L'ORDINE):\n1. Titolo: <h2>[Nome Cantina] - [Nome Vino] [Anno]</h2>\n\n2. Introduzione: <p><strong>[Nome Vino]</strong> nasce da... [Descrivi vitigno, lieu-dit e filosofia produttiva]</p>\n\n3. Tecnica: <p>[Dettagli fermentazione, uso del legno, permanenza sui lieviti e gestione dei solfiti]</p>\n\n4. Esame Organolettico: 4 paragrafi <p> distinti che iniziano con: (Vista), (Bouquet), (Palato), (Equilibrio e Potenziale di invecchiamento).</p>\n\n5. Sintesi: <p>[Paragrafo che riassume l'identità territoriale e l'eleganza del prodotto].</p>\n\n6. Sezioni Liste: \n   <h3>🎁 IDEALE PER:</h3>\n   [Genera 5 punti elenco nel formato indicato al punto 8]\n   \n   <h3>🎁 ABBINAMENTI GASTRONOMICI:</h3>\n   [Genera 5 punti elenco nel formato indicato al punto 8]\n\n7. FRASE EVOCATIVA (CHIUSURA OBBLIGATORIA): \n   Deve essere l'ULTIMO paragrafo del documento, posizionato dopo l'ultimo punto elenco degli abbinamenti.\n   Deve essere un paragrafo unico, SENZA virgolette, scritto interamente in corsivo.\n   Formato: <p><em>[Inserisci qui una frase poetica e magnetica personalizzata per il vino. Esempio: \"Purezza cristallina, mineralità profonda: l'essenza di Avize in un Blanc de Blancs senza tempo.\"].</em></p>\n\n8. Punti elenco (Formato fisso per le liste): \n   <p>✨ <span style=\"color: inherit; font-size: 1rem;\">[Testo breve e accattivante]</span></p>\n\nDATI DI INPUT:\n- Template: {{ $('Workflow Configuration').first().json.templateSheetName }}\n- Cantina: {{ $json.vino.domain }}\n- Vino: {{ $json.vino.nome_vino }}\n- Anno: {{ $json.vino.anno }}\n- Ricerca Tecnica (Perplexity): {{ $json.choices[0].message.content }}\n- Profilo Cantina (dedup domain): {{ $json.cantina_research }}\n\nNOTE IMPORTANTI:\n- La frase evocativa deve essere la chiusura finale del file, come nel template di riferimento.\n- NON usare virgolette nella frase evocativa.\n- NON aggiungere tag <html> o <body>.\n- Assicurati che ogni tag <span> e <em> sia chiuso correttamente.",
+        "options": {
+          "systemMessage": "Sei un sommelier esperto e un copywriter di lusso. Il tuo compito è generare una descrizione tecnica ed emozionale seguendo RIGOROSAMENTE la struttura HTML del template fornito. Restituisci SOLO il contenuto HTML partendo da <h2>."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -34336,
+        8368
+      ],
+      "id": "ce9df68e-8869-489d-bb12-97429fd99791",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combina l'output di AI Agent con i dati del vino\n// Obiettivo: mantenere SEMPRE i campi critici per Pulizia+Formattazione Testo (domain, nome_vino, folderId)\nconst aiOutput = $input.item.json || {};\n\nfunction hasRequiredVinoFields(v) {\n  return !!(v && v.domain && v.nome_vino);\n}\n\nlet vino = null;\n\n// 1) Se AI Agent ha già un vino completo, usa quello\nif (hasRequiredVinoFields(aiOutput.vino)) {\n  vino = aiOutput.vino;\n}\n\n// 2) Preferisci il paired item di Combine Data (più affidabile dell'accesso per index)\nif (!vino) {\n  const combinePaired = $('Combine Data');\n  if (combinePaired && combinePaired.item && combinePaired.item.json && combinePaired.item.json.vino) {\n    vino = combinePaired.item.json.vino;\n  }\n}\n\n// 3) Fallback: ricostruisci dai dati correnti del batch (Split In Batches)\nif (!vino) {\n  const batchNode = $('Split In Batches');\n  const b = (batchNode && batchNode.item && batchNode.item.json) ? batchNode.item.json : null;\n  if (b && b.domain) {\n    vino = {\n      domain: b.domain,\n      nome_vino: b.nome_vino,\n      anno: b.anno,\n      litraggio: b.litraggio,\n      outputFolderId: b.outputFolderId,\n      productFolderId: b.productFolderId\n    };\n  }\n}\n\nif (!vino) {\n  throw new Error('Dati vino non trovati nel flusso. Assicurati che Combine Data e Split In Batches passino correttamente i dati del vino.');\n}\n\nreturn {\n  json: {\n    ...aiOutput,\n    vino\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -33984,
+        8368
+      ],
+      "id": "20cc6f17-1e46-432f-9040-ee5f4b0e6f78",
+      "name": "Combine AI Output"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -35392,
+        7936
+      ],
+      "id": "80547cd0-cdb8-4306-99b8-1a7da89cc90b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "domain",
+        "options": {
+          "removeOtherFields": false
+        }
+      },
+      "id": "67d135dd-c27e-4f69-8b9c-f947f76196ea",
+      "name": "Remove Duplicates Domains",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -38272,
+        7808
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-domain",
+              "name": "domain",
+              "value": "={{ $json.domain }}",
+              "type": "string"
+            },
+            {
+              "id": "id-1",
+              "name": "searchQuery",
+              "value": "={{ 'Esegui una ricerca approfondita sulla cantina ' + ($json.domain || '') + '. Trova: 1) Storia della cantina e filosofia produttiva. 2) Approccio in vigna (bio/biodinamica, rese, parcelle). 3) Approccio in cantina (fermentazioni, legni, affinamenti tipici). 4) Stile dei vini e tratti distintivi. 5) Terroir e zona di riferimento.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c361265b-46d8-4229-91df-43438e635b22",
+      "name": "Prepare Perplexity Cantina Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -38048,
+        7808
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "perplexityApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Workflow Configuration').first().json.perplexityModel, messages: [{ role: 'user', content: $json.searchQuery }], temperature: 0.2, return_citations: true } }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "51dcaeab-f8e5-40eb-af29-14525aaf2125",
+      "name": "Call Perplexity API (Cantina)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -37824,
+        7808
+      ],
+      "credentials": {
+        "perplexityApi": {
+          "id": "YOUR_PERPLEXITY_CREDENTIAL_ID",
+          "name": "Perplexity account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const inputData = $input.item.json; let response = inputData; if (inputData.body) { response = inputData.body; } else if (inputData.data) { try { response = JSON.parse(inputData.data); } catch (e) { response = inputData; } } const content = (response && response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) ? response.choices[0].message.content : null; const domain = inputData.domain || $('Prepare Perplexity Cantina Request').item.json.domain; if (!domain) { throw new Error('Domain not found in input data'); } if (!content) { throw new Error('Cantina research content not found in response'); } return { json: { domain: domain, cantina_research: content } };"
+      },
+      "id": "34c42a5e-5f54-4b2b-a586-65191157b9d7",
+      "name": "Extract Cantina Research",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -36704,
+        7808
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "domain",
+        "joinMode": "enrichInput2",
+        "options": {
+          "multipleMatches": "first"
+        }
+      },
+      "id": "d4a53ba9-ad39-4e42-9eef-3dae9d5f0267",
+      "name": "Merge Cantina Research",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -36480,
+        8400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ 'name=\\'' + $('Workflow Configuration').first().json.ProductDescriptionsFolderName + '\\' and \\'' + $('Store ITA Folder ID').first().json.itaFolderId + '\\' in parents and mimeType=\\'application/vnd.google-apps.folder\\' and trashed=false' }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fb137b9f-143b-4808-aa79-ee774a825d42",
+      "name": "Check Product Folder Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -40064,
+        7984
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ ($input.all()[0] && $input.all()[0].json.files && Array.isArray($input.all()[0].json.files)) ? $input.all()[0].json.files.length : $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6b239b85-280a-4a86-8552-6e25cb96821f",
+      "name": "IF Product Folder Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -39840,
+        7984
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "productFolderId",
+              "value": "={{ ($json.files && Array.isArray($json.files) && $json.files.length > 0) ? $json.files[0].id : $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7a18c9c3-8fac-442f-928e-3d0742e2b825",
+      "name": "Use Existing Product Folder",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -39616,
+        7792
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Workflow Configuration').first().json.ProductDescriptionsFolderName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Store ITA Folder ID').first().json.itaFolderId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "a12e9b79-96b8-4cb4-9991-6f03f4f37e92",
+      "name": "Create Product Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -39616,
+        8176
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "productFolderId",
+              "value": "={{ $json.productFolderId || $json.id || ($json.files && Array.isArray($json.files) && $json.files.length > 0 ? $json.files[0].id : null) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6ec1eac9-a7ec-49a9-8b5c-db823d83d1b2",
+      "name": "Store Product Folder ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -39392,
+        7984
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ 'name=\\'' + $('Workflow Configuration').first().json.domainDescriptionsFolderName + '\\' and \\'' + $('Store ITA Folder ID').first().json.itaFolderId + '\\' in parents and mimeType=\\'application/vnd.google-apps.folder\\' and trashed=false' }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e6ba18f5-ad1b-4c08-ba16-903a764dd788",
+      "name": "Check Domain Folder Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -39088,
+        7312
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ ($input.all()[0] && $input.all()[0].json.files && Array.isArray($input.all()[0].json.files)) ? $input.all()[0].json.files.length : $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "092779df-e177-47c4-8696-38e9aeef71ba",
+      "name": "IF Domain Folder Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -38864,
+        7312
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "domainFolderId",
+              "value": "={{ ($json.files && Array.isArray($json.files) && $json.files.length > 0) ? $json.files[0].id : $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "db9478a9-589f-4957-a06d-2d942e41772f",
+      "name": "Use Existing Domain Folder",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -38640,
+        7072
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Workflow Configuration').first().json.domainDescriptionsFolderName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Store ITA Folder ID').first().json.itaFolderId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "4eb97432-de25-45b1-a051-b57a91ae062d",
+      "name": "Create Domain Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -38640,
+        7504
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "domainFolderId",
+              "value": "={{ $json.domainFolderId || $json.id || ($json.files && Array.isArray($json.files) && $json.files.length > 0 ? $json.files[0].id : null) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3b002599-8f24-47f6-815a-69721492b659",
+      "name": "Store Domain Folder ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -38416,
+        7312
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ '\\'' + $('Store Domain Folder ID').first().json.domainFolderId + '\\' in parents and name contains \\'.md\\' and trashed=false' }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "00b47b0d-17b4-433e-8d20-526462b622d8",
+      "name": "Get Existing Domain Files",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -38192,
+        7312
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "1e2e4992-3309-44f6-8027-c0e073084a6e",
+      "name": "Merge Domain Files Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -36480,
+        7552
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filtra i domain escludendo quelli che hanno già il file DOMINIO.md\n// I dati arrivano dal Merge: items da Extract Cantina Research e item da Get Existing Domain Files\nconst allItems = $input.all();\n\nlet allDomains = [];\nlet existingFilesResponse = null;\n\n// Separate domain items from file list response\nfor (const item of allItems) {\n  if (item.json.files && Array.isArray(item.json.files)) {\n    // This is the file list from Get Existing Domain Files\n    existingFilesResponse = item.json;\n  } else if (item.json.domain) {\n    // This is a domain item from Extract Cantina Research\n    allDomains.push(item);\n  }\n}\n\nif (allDomains.length === 0) {\n  throw new Error('Nessun domain trovato nel merge (domain)');\n}\n\n// Build set of existing file names (normalized)\nlet existingFileNames = [];\nlet existingFilesArray = [];\nif (existingFilesResponse && existingFilesResponse.files && Array.isArray(existingFilesResponse.files)) {\n  existingFilesArray = existingFilesResponse.files;\n  existingFileNames = existingFilesArray.map(f => (f.name || '').toLowerCase().trim()).filter(Boolean);\n}\n\nconst domainFolderId = $('Store Domain Folder ID').first().json.domainFolderId;\nif (!domainFolderId) {\n  throw new Error('domainFolderId non trovato');\n}\n\n// Generate expected filename for a domain\nfunction expectedDomainFileName(domain) {\n  const d = (domain || '').trim();\n  if (!d) return null;\n  return (d + '.md').toLowerCase().trim();\n}\n\n// Filter out domains that already have files\nconst domainsDaProcessare = allDomains.filter(item => {\n  const expected = expectedDomainFileName(item.json.domain);\n  if (!expected) return true; // Keep items without valid domain name\n  return !existingFileNames.includes(expected);\n}).map(item => ({\n  json: {\n    domain: item.json.domain,\n    cantina_research: item.json.cantina_research,\n    domainFolderId\n  }\n}));\n\n// If no new domains to process, return empty flag with existing files info\nif (domainsDaProcessare.length === 0) {\n  console.log('Tutti i domain hanno già le descrizioni generate. Nessun file da processare.');\n  return [{ json: { \n    isEmpty: true, \n    existingDomainFiles: existingFilesArray.map(f => f.name).filter(Boolean),\n    existingDomainFilesCount: existingFilesArray.length\n  } }];\n}\n\n// Return new domains to process\nreturn domainsDaProcessare;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -36256,
+        7552
+      ],
+      "id": "ab71936b-9624-45d6-a1f1-521ea43a9afb",
+      "name": "Filter Existing Domain Files"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ $input.all().length > 0 && !$input.all()[0].json.isEmpty }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "bcdab669-4d97-49cc-a9c1-a21ca06e504b",
+      "name": "Check Empty Array (Domain)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -36032,
+        7552
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "bbe02be7-507f-4f64-ae58-b2d2c2ab402c",
+      "name": "Split In Batches (Domain)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -35680,
+        7744
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Template di riferimento: {{ $('Workflow Configuration').first().json.templateDomainName }}\n\nDATI DI INPUT:\n- Cantina (domain): {{ $json.domain }}\n- Ricerca Cantina (Perplexity): {{ $json.cantina_research }}\n\nRestituisci SOLO il contenuto HTML partendo da <h2>.\n\nNOTE IMPORTANTI:\n- NON aggiungere tag <html> o <body>.\n- Assicurati che ogni tag HTML sia chiuso correttamente.",
+        "options": {
+          "systemMessage": "Sei un sommelier esperto e un copywriter di lusso. Il tuo compito è generare una descrizione della cantina/produttore seguendo RIGOROSAMENTE la struttura HTML del template fornito."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -35456,
+        7712
+      ],
+      "id": "6d0657e3-f905-4df4-9cc3-5e3355e0d46a",
+      "name": "AI Agent (Domain)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Assicura che domain e domainFolderId restino nel flusso dopo AI Agent (Domain)\nconst aiOutput = $input.item.json;\nconst domainItem = $('Split In Batches (Domain)').item.json;\n\nconst domain = aiOutput.domain || domainItem.domain;\nconst domainFolderId = aiOutput.domainFolderId || domainItem.domainFolderId;\nconst cantina_research = aiOutput.cantina_research || domainItem.cantina_research;\n\nif (!domain || !domainFolderId) {\n  throw new Error('Dati domain incompleti dopo AI Agent (Domain)');\n}\n\nreturn {\n  json: {\n    ...aiOutput,\n    domain,\n    domainFolderId,\n    cantina_research\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -35104,
+        7712
+      ],
+      "id": "7c03403e-658f-4e15-9f33-713154e6301a",
+      "name": "Combine Domain AI Output"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pulizia + formattazione output domain -> DOMINIO.md\nlet rawHTML = null;\nconst output = $input.item.json.output;\n\nif (typeof output === 'string') {\n  rawHTML = output;\n} else if (output && Array.isArray(output) && output[0] && output[0].content && Array.isArray(output[0].content) && output[0].content[0]) {\n  rawHTML = output[0].content[0].text;\n} else if (output && output.text) {\n  rawHTML = output.text;\n} else {\n  throw new Error('Risposta del modello non valida (domain)');\n}\n\nif (!rawHTML || typeof rawHTML !== 'string') {\n  throw new Error('Contenuto HTML non valido o vuoto (domain)');\n}\n\nlet cleanHTML = rawHTML\n  .replace(/<!DOCTYPE html>|<\\/?html.*?>|<\\/?head>|<\\/?body>|<meta.*?>|<title>.*?<\\/title>/gi, '')\n  .trim();\n\nconst domain = ($input.item.json.domain || '').trim();\nconst folderId = $input.item.json.domainFolderId;\n\nif (!domain) {\n  throw new Error('Domain mancante per nome file (domain)');\n}\nif (!folderId) {\n  throw new Error('domainFolderId mancante (domain)');\n}\n\nreturn {\n  nome_file: `${domain}.md`,\n  contenuto_md: cleanHTML,\n  folder_id: folderId\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -34880,
+        7712
+      ],
+      "id": "4ac3559b-3e63-4586-9c0c-9144d73bb9aa",
+      "name": "Pulizia+Formattazione Testo (Domain)"
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $json.contenuto_md }}",
+        "name": "={{ $json.nome_file }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.folder_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -34656,
+        7840
+      ],
+      "id": "f2b57805-0880-487d-999d-5d4959cc17fe",
+      "name": "Create file from text (Domain)",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Messaggio finale domain: lista file DOMINIO.md creati\ntry {\n  const filterNode = $('Filter Existing Domain Files');\n  const allDomains = (filterNode && filterNode.all && filterNode.all().length > 0)\n    ? filterNode.all().map(i => i.json)\n    : [];\n\n  const totalFiles = allDomains.length;\n  if (totalFiles === 0) throw new Error('Nessun domain processato');\n\n  const fileNames = allDomains.map(d => (d.domain || 'Domain-sconosciuto') + '.md').join('\\n- ');\n\n  // Recupera anche i file domain esistenti per il resoconto completo\n  let existingDomainFiles = [];\n  try {\n    const getExistingDomainFilesNode = $('Get Existing Domain Files');\n    if (getExistingDomainFilesNode && getExistingDomainFilesNode.first()) {\n      const response = getExistingDomainFilesNode.first().json;\n      if (response && response.files && Array.isArray(response.files)) {\n        existingDomainFiles = response.files.map(f => f.name).filter(Boolean);\n      }\n    }\n  } catch (e) {}\n\n  return {\n    json: {\n      domainTotalFiles: totalFiles,\n      domainFileNames: fileNames,\n      existingDomainFilesCount: existingDomainFiles.length,\n      existingDomainFileNames: existingDomainFiles.join('\\n- ')\n    }\n  };\n} catch (e) {\n  return {\n    json: {\n      domainTotalFiles: 0,\n      domainFileNames: '',\n      existingDomainFilesCount: 0,\n      existingDomainFileNames: ''\n    }\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -35520,
+        7376
+      ],
+      "id": "48a0d6af-c559-4b4c-99c3-a2c3fa0c8eac",
+      "name": "Prepare Final Message (Domain)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Caso: nessun nuovo file domain da creare\n// I file esistenti sono passati direttamente da Filter Existing Domain Files\nlet existingDomainFiles = [];\nconst inputData = $json || {};\n\n// Prima prova a usare i dati passati direttamente\nif (inputData.existingDomainFiles && Array.isArray(inputData.existingDomainFiles)) {\n  existingDomainFiles = inputData.existingDomainFiles;\n} else {\n  // Fallback: recupera da Get Existing Domain Files\n  try {\n    const getExistingDomainFilesNode = $('Get Existing Domain Files');\n    if (getExistingDomainFilesNode && getExistingDomainFilesNode.first()) {\n      const response = getExistingDomainFilesNode.first().json;\n      if (response && response.files && Array.isArray(response.files)) {\n        existingDomainFiles = response.files.map(f => f.name).filter(Boolean);\n      }\n    }\n  } catch (e) {\n    console.log('Impossibile recuperare file domain esistenti: ' + e.message);\n  }\n}\n\nconst existingDomainFilesCount = existingDomainFiles.length;\nconst existingDomainFileNames = existingDomainFiles.join('\\n- ');\n\nreturn {\n  json: {\n    domainTotalFiles: 0,\n    domainFileNames: '',\n    existingDomainFilesCount: existingDomainFilesCount,\n    existingDomainFileNames: existingDomainFileNames\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -35520,
+        7184
+      ],
+      "id": "344918af-39f3-4199-8811-782ed1dc3f74",
+      "name": "Prepare Empty Message (Domain)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalizza output prodotto (sia da Prepare Final Message che da Prepare Empty Message)\nconst j = $json || {};\n\nreturn {\n  json: {\n    runId: '1',\n    productTotalFiles: Number(j.totalFiles || 0),\n    productFileNames: (j.fileNames || '').toString(),\n    existingProductFilesCount: Number(j.existingFilesCount || 0),\n    existingProductFileNames: (j.existingFileNames || '').toString(),\n    outputFolderName: (j.outputFolderName || $('Workflow Configuration').first().json.outputFolderName || '').toString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -35808,
+        8128
+      ],
+      "id": "bee2379e-01a1-4744-ac57-9763c7268605",
+      "name": "Set Product Summary"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalizza output domain (sia da Prepare Final Message (Domain) che da Prepare Empty Message (Domain))\nconst j = $json || {};\nreturn {\n  json: {\n    runId: '1',\n    domainTotalFiles: Number(j.domainTotalFiles || 0),\n    domainFileNames: (j.domainFileNames || '').toString(),\n    existingDomainFilesCount: Number(j.existingDomainFilesCount || 0),\n    existingDomainFileNames: (j.existingDomainFileNames || '').toString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -35232,
+        7280
+      ],
+      "id": "6116be8d-b4ed-43aa-bb48-6ea46e1232bf",
+      "name": "Set Domain Summary"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Compone messaggio Telegram quando prodotto+domain sono conclusi\nconst outputFolderName = ($json.outputFolderName || $('Workflow Configuration').first().json.outputFolderName || '').toString();\nconst pTotal = Number($json.productTotalFiles || 0);\nconst dTotal = Number($json.domainTotalFiles || 0);\nconst pFiles = ($json.productFileNames || '').toString().trim();\nconst dFiles = ($json.domainFileNames || '').toString().trim();\n\n// File esistenti (già presenti nelle cartelle)\nconst existingPTotal = Number($json.existingProductFilesCount || 0);\nconst existingDTotal = Number($json.existingDomainFilesCount || 0);\nconst existingPFiles = ($json.existingProductFileNames || '').toString().trim();\nconst existingDFiles = ($json.existingDomainFileNames || '').toString().trim();\n\nlet msg = '🚀 **Workflow completato**\\n\\n';\nmsg += '📁 Cartella: ' + outputFolderName + '\\n\\n';\n\n// Sezione Prodotti\nmsg += '✅ **Prodotti**:\\n';\nif (pTotal > 0 && pFiles) {\n  msg += '📄 Nuovi file creati (' + pTotal + '):\\n- ' + pFiles + '\\n';\n} else {\n  msg += '📄 Nuovi file creati: 0\\n';\n}\nif (existingPTotal > 0 && existingPFiles) {\n  msg += '📂 File già presenti (' + existingPTotal + '):\\n- ' + existingPFiles + '\\n';\n}\nmsg += '\\n';\n\n// Sezione Domain\nmsg += '✅ **Domain (produttori)**:\\n';\nif (dTotal > 0 && dFiles) {\n  msg += '📄 Nuovi file creati (' + dTotal + '):\\n- ' + dFiles + '\\n';\n} else {\n  msg += '📄 Nuovi file creati: 0\\n';\n}\nif (existingDTotal > 0 && existingDFiles) {\n  msg += '📂 File già presenti (' + existingDTotal + '):\\n- ' + existingDFiles;\n}\n\nreturn { json: { message: msg } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -34784,
+        7280
+      ],
+      "id": "8aee1de6-516e-4d71-91b2-49dbeac5a4f3",
+      "name": "Compose Telegram Message"
+    },
+    {
+      "parameters": {
+        "content": "## Controllo #1 struttura DRIVE\n** controlla se esiste cartella \n'descrizioni_2026'",
+        "height": 224,
+        "width": 544
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -42304,
+        7312
+      ],
+      "id": "f3874f39-e9ed-41e4-9f86-aed26e022312",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Controllo #6 struttura DRIVE\n** controlla se esiste cartella:\nITA-> 'descrizioni-DOMAIN'\n",
+        "height": 208,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -39104,
+        7200
+      ],
+      "id": "73ae533e-aaac-4215-8249-70d816e95274",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger INIZIALE",
+        "height": 192,
+        "width": 336,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -42752,
+        7360
+      ],
+      "id": "45292bdb-2a59-46e7-a6cf-a9f02def1907",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Preparazione del messaggio TELEGRAM \n",
+        "height": 208,
+        "width": 576,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -35008,
+        7200
+      ],
+      "id": "2d8f34be-a2d4-4b2b-9e84-764afda65a1f",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Generazione descrizione per Prodotto (prodotto)\n**genera il testo, poi lo salva su drive in 'descrizioni_PRODOTTO'",
+        "height": 368,
+        "width": 2048
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -34784,
+        8160
+      ],
+      "id": "fe9b8a78-60e5-4aec-983d-84f4af483b81",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Download Lista_Vini.json\n** download lista vini e estrazione di un oggetto prodotto alla volta\n",
+        "height": 224,
+        "width": 784
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -39184,
+        7760
+      ],
+      "id": "79246a15-c301-4742-a87e-8209623754f3",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "runId",
+        "joinMode": "enrichInput1",
+        "options": {
+          "multipleMatches": "first"
+        }
+      },
+      "id": "7ec1b254-4dfd-43e2-921f-9c34a038b64e",
+      "name": "Merge Summaries",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -35008,
+        7280
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Lista finale di prodotti \nper cui effettuare la ricerca",
+        "height": 208,
+        "width": 336
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -36480,
+        8288
+      ],
+      "id": "919914a3-7f9c-44d3-a237-4660db413391",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Lista finale di Fornitori (domini)\n",
+        "height": 208,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -36512,
+        7456
+      ],
+      "id": "d79ff040-bab3-4176-b147-3be3db3d0760",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "## Recupera\nfile prodotto preesistenti",
+        "height": 208,
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -38528,
+        8464
+      ],
+      "id": "5f613bd9-4533-4a1d-bdbe-64e8458c887f",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "## Raffina la lista e estrae il fornitore/i che manca dalla cartella DOMAIN \n",
+        "height": 176,
+        "width": 800
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -38288,
+        7744
+      ],
+      "id": "52b7f128-7787-4b5e-9cf5-6d61d9323c76",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "content": "## Raffina la lista\n** rimuove i prodotti se esistono già nella cartella PRODOTTI\n",
+        "height": 192,
+        "width": 336
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -38272,
+        8464
+      ],
+      "id": "d49ec830-78eb-4955-97c4-f9997b427d46",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "content": "## o esiste \n\n## o la crea",
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -41424,
+        7440
+      ],
+      "id": "107ce560-c69a-4854-b43c-3f15168e661b",
+      "name": "Sticky Note15"
+    },
+    {
+      "parameters": {
+        "content": "## o esiste \n\n## o la crea",
+        "height": 128,
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40544,
+        7424
+      ],
+      "id": "f97c2c1e-900c-4f1f-b6f7-ee841dc44a2a",
+      "name": "Sticky Note16"
+    },
+    {
+      "parameters": {
+        "content": "## Se le descrizioni sono gia tutte presenti",
+        "height": 288,
+        "width": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -36080,
+        8656
+      ],
+      "id": "cdf1030f-f7eb-466c-9baa-6fe1b698573b",
+      "name": "Sticky Note17"
+    },
+    {
+      "parameters": {
+        "content": "## Lista prodotti per telegram",
+        "height": 176,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -36048,
+        8064
+      ],
+      "id": "6ea45922-f85e-4b06-8c1a-5cd9da77038c",
+      "name": "Sticky Note18"
+    },
+    {
+      "parameters": {
+        "content": "## Lista fornitori per telegram",
+        "height": 208,
+        "width": 208
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -35280,
+        7168
+      ],
+      "id": "fb8d2a81-341a-4d96-8721-76a2489a7b5f",
+      "name": "Sticky Note19"
+    },
+    {
+      "parameters": {
+        "content": "## Loop di ricerca per i Fornitori (domain)\n\nitera un fornitore alla volta e alla fine prepara la lista dei fornitori eseguiti per messaggio telegram",
+        "height": 480,
+        "width": 1952
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -35696,
+        7600
+      ],
+      "id": "32c94549-61a6-4511-b394-4cdcab7451b6",
+      "name": "Sticky Note20"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ 'name=\\'' + $('Workflow Configuration').first().json.itaFolderName + '\\' and \\'' + $('Store Folder ID').first().json.outputFolderId + '\\' in parents and mimeType=\\'application/vnd.google-apps.folder\\' and trashed=false' }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "995442e7-df41-4e24-a6fe-105816fe5909",
+      "name": "Check ITA Folder Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -40960,
+        7456
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ ($input.all()[0] && $input.all()[0].json.files && Array.isArray($input.all()[0].json.files)) ? $input.all()[0].json.files.length : $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f340ccf2-c18a-4f30-b702-ac2a16d2c398",
+      "name": "IF ITA Folder Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -40736,
+        7456
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "itaFolderId",
+              "value": "={{ ($json.files && Array.isArray($json.files) && $json.files.length > 0) ? $json.files[0].id : $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8ef026a6-1c82-45e0-8a9a-599e7247c66b",
+      "name": "Use Existing ITA Folder",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -40512,
+        7232
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Workflow Configuration').first().json.itaFolderName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Store Folder ID').first().json.outputFolderId }}"
+        },
+        "options": {}
+      },
+      "id": "572c72e6-c81b-4e16-bf56-7bf2c98dc7fc",
+      "name": "Create ITA Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -40496,
+        7664
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "itaFolderId",
+              "value": "={{ $json.itaFolderId || $json.id || ($json.files && Array.isArray($json.files) && $json.files.length > 0 ? $json.files[0].id : null) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "344b08e0-89c1-4011-b843-3a52388544ac",
+      "name": "Store ITA Folder ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -40288,
+        7456
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ 'name=\\'' + $('Workflow Configuration').first().json.engFolderName + '\\' and \\'' + $('Store Folder ID').first().json.outputFolderId + '\\' in parents and mimeType=\\'application/vnd.google-apps.folder\\' and trashed=false' }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "29a2af60-a898-4878-a04c-4a2ae6631765",
+      "name": "Check ENG Folder Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -40064,
+        6928
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ ($input.all()[0] && $input.all()[0].json.files && Array.isArray($input.all()[0].json.files)) ? $input.all()[0].json.files.length : $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f8c74891-9b71-4422-a27b-b46fd782c687",
+      "name": "IF ENG Folder Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -39840,
+        6928
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "engFolderId",
+              "value": "={{ ($json.files && Array.isArray($json.files) && $json.files.length > 0) ? $json.files[0].id : $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e2e92ea3-e970-4b46-9225-6d10862b028d",
+      "name": "Use Existing ENG Folder",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -39616,
+        6720
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Workflow Configuration').first().json.engFolderName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Store Folder ID').first().json.outputFolderId }}"
+        },
+        "options": {}
+      },
+      "id": "880b812c-9f57-41a0-b34b-1dc761f4f1e0",
+      "name": "Create ENG Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -39616,
+        7136
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "engFolderId",
+              "value": "={{ $json.engFolderId || $json.id || ($json.files && Array.isArray($json.files) && $json.files.length > 0 ? $json.files[0].id : null) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "23facb88-d472-43b8-90be-bda57473b44f",
+      "name": "Store ENG Folder ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -39392,
+        6928
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ 'name=\\'' + $('Workflow Configuration').first().json.ProductDescriptionsFolderName + '\\' and \\'' + $('Store ENG Folder ID').first().json.engFolderId + '\\' in parents and mimeType=\\'application/vnd.google-apps.folder\\' and trashed=false' }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3487c3ed-353b-4b1e-93ca-705f508537c5",
+      "name": "Check ENG Product Folder Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -39152,
+        6032
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ ($input.all()[0] && $input.all()[0].json.files && Array.isArray($input.all()[0].json.files)) ? $input.all()[0].json.files.length : $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8d59f212-1500-4d6d-b854-2c45d734b73a",
+      "name": "IF ENG Product Folder Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -38928,
+        6032
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "engProductFolderId",
+              "value": "={{ ($json.files && Array.isArray($json.files) && $json.files.length > 0) ? $json.files[0].id : $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1ba9f557-1663-4961-9877-4b6a87fd710a",
+      "name": "Use Existing ENG Product Folder",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -38704,
+        5840
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Workflow Configuration').first().json.ProductDescriptionsFolderName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Store ENG Folder ID').first().json.engFolderId }}"
+        },
+        "options": {}
+      },
+      "id": "867a1ebd-4fea-428f-97b4-d6dc02e70178",
+      "name": "Create ENG Product Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -38704,
+        6160
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "engProductFolderId",
+              "value": "={{ $json.engProductFolderId || $json.id || ($json.files && Array.isArray($json.files) && $json.files.length > 0 ? $json.files[0].id : null) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b0ef582d-b48c-4521-b334-cafd06e5437f",
+      "name": "Store ENG Product Folder ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -38480,
+        6032
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ 'name=\\'' + $('Workflow Configuration').first().json.domainDescriptionsFolderName + '\\' and \\'' + $('Store ENG Folder ID').first().json.engFolderId + '\\' in parents and mimeType=\\'application/vnd.google-apps.folder\\' and trashed=false' }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,mimeType)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d4fc6cf8-1c80-4566-b7af-32bc2b702916",
+      "name": "Check ENG Domain Folder Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -39104,
+        6656
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ ($input.all()[0] && $input.all()[0].json.files && Array.isArray($input.all()[0].json.files)) ? $input.all()[0].json.files.length : $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a3fd5e67-1cd9-4c64-8dc7-60b3eea04935",
+      "name": "IF ENG Domain Folder Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -38880,
+        6656
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "engDomainFolderId",
+              "value": "={{ ($json.files && Array.isArray($json.files) && $json.files.length > 0) ? $json.files[0].id : $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e822a0f2-b164-4ab2-8238-9c25863839bb",
+      "name": "Use Existing ENG Domain Folder",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -38656,
+        6464
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Workflow Configuration').first().json.domainDescriptionsFolderName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Store ENG Folder ID').first().json.engFolderId }}"
+        },
+        "options": {}
+      },
+      "id": "0aa5b905-d736-49db-a5aa-79c15afc1bb4",
+      "name": "Create ENG Domain Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -38656,
+        6848
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "engDomainFolderId",
+              "value": "={{ $json.engDomainFolderId || $json.id || ($json.files && Array.isArray($json.files) && $json.files.length > 0 ? $json.files[0].id : null) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5ba4140f-b554-46f5-a8b5-dc77f2cf5daf",
+      "name": "Store ENG Domain Folder ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -38432,
+        6656
+      ]
+    },
+    {
+      "parameters": {
+        "text": "={{ $('Pulizia+Formattazione Testo').item.json.contenuto_md }}",
+        "translateTo": "en"
+      },
+      "id": "c221e883-cb7f-48dd-a1d4-1aa3efbd8ff7",
+      "name": "Translate Product Description to English",
+      "type": "n8n-nodes-base.googleTranslate",
+      "typeVersion": 2,
+      "position": [
+        -33312,
+        8368
+      ],
+      "credentials": {
+        "googleTranslateOAuth2Api": {
+          "id": "YOUR_GOOGLE_TRANSLATE_CREDENTIAL_ID",
+          "name": "Google Translate account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const translatedText = $json.text || $json.translatedText; const originalData = $('Pulizia+Formattazione Testo').item.json; const engProductFolderId = $('Store ENG Product Folder ID').first().json.engProductFolderId; if (!translatedText) { throw new Error('Translated text not found'); } if (!engProductFolderId) { throw new Error('English product folder ID not found'); } return { json: { nome_file: originalData.nome_file, contenuto_md: translatedText, folder_id: engProductFolderId } };"
+      },
+      "id": "0aeab00c-400c-484d-a52e-aee8811f892c",
+      "name": "Prepare English Product File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -33088,
+        8368
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $json.contenuto_md }}",
+        "name": "={{ $json.nome_file }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.folder_id }}"
+        },
+        "options": {}
+      },
+      "id": "a37e38ff-1ec4-4143-8720-176ddfcad494",
+      "name": "Create English Product File",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -32864,
+        8448
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $('Pulizia+Formattazione Testo (Domain)').item.json.contenuto_md }}",
+        "translateTo": "en"
+      },
+      "id": "825551b8-8090-489f-bec5-cc6ed802e725",
+      "name": "Translate Domain Description to English",
+      "type": "n8n-nodes-base.googleTranslate",
+      "typeVersion": 2,
+      "position": [
+        -34432,
+        7840
+      ],
+      "credentials": {
+        "googleTranslateOAuth2Api": {
+          "id": "YOUR_GOOGLE_TRANSLATE_CREDENTIAL_ID",
+          "name": "Google Translate account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const translatedText = $json.text || $json.translatedText; const originalData = $('Pulizia+Formattazione Testo (Domain)').item.json; const engDomainFolderId = $('Store ENG Domain Folder ID').first().json.engDomainFolderId; if (!translatedText) { throw new Error('Translated text not found'); } if (!engDomainFolderId) { throw new Error('English domain folder ID not found'); } return { json: { nome_file: originalData.nome_file, contenuto_md: translatedText, folder_id: engDomainFolderId } };"
+      },
+      "id": "d4b76eda-00e2-4c66-953a-090af16a27ca",
+      "name": "Prepare English Domain File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -34144,
+        7840
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $json.contenuto_md }}",
+        "name": "={{ $json.nome_file }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.folder_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "9931b7e3-87df-4bb1-a7a1-16199ddcc840",
+      "name": "Create English Domain File",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -33856,
+        7920
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## o esiste \n\n## o la crea",
+        "height": 112,
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -39632,
+        6928
+      ],
+      "id": "efe94ab7-b143-4de9-9750-24e05eb83972",
+      "name": "Sticky Note21"
+    },
+    {
+      "parameters": {
+        "content": "## o esiste \n\n## o la crea",
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -38672,
+        6672
+      ],
+      "id": "5c797df7-be51-4a27-bdbd-c814d499e135",
+      "name": "Sticky Note22"
+    },
+    {
+      "parameters": {
+        "content": "## o esiste \n\n## o la crea",
+        "height": 128,
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -38736,
+        6016
+      ],
+      "id": "b9f08501-684f-40ca-a962-7d8067679c36",
+      "name": "Sticky Note23"
+    },
+    {
+      "parameters": {
+        "content": "## Controllo #2 struttura DRIVE\n** controlla se esiste cartella \n'ITA'",
+        "height": 224,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40976,
+        7328
+      ],
+      "id": "b8482712-a1db-4e45-8822-f55138f8f1be",
+      "name": "Sticky Note24"
+    },
+    {
+      "parameters": {
+        "content": "## Controllo #3 struttura DRIVE\n** controlla se esiste cartella \n'ENG'",
+        "height": 224,
+        "width": 368
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40096,
+        6816
+      ],
+      "id": "58cb7144-48f0-4d60-b2f2-67bfeb432b98",
+      "name": "Sticky Note25"
+    },
+    {
+      "parameters": {
+        "content": "## Controllo #4 struttura DRIVE\n** controlla se esiste cartella \nENG->'descrizioni-PRODOTTO'",
+        "height": 224,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -39168,
+        5904
+      ],
+      "id": "13be8eeb-2bbc-419a-a4b9-0189570bc377",
+      "name": "Sticky Note26"
+    },
+    {
+      "parameters": {
+        "content": "## Controllo #5 struttura DRIVE\n** controlla se esiste cartella \nENG->'descrizioni-DOMAIN'",
+        "height": 224,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -39120,
+        6544
+      ],
+      "id": "f54cdb06-1b11-49c0-9f2a-99c4412abf9a",
+      "name": "Sticky Note27"
+    },
+    {
+      "parameters": {
+        "content": "## Controllo #7 struttura DRIVE\n** controlla se esiste cartella:\nITA-> 'descrizioni-DOMAIN'\n",
+        "height": 224,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40080,
+        7920
+      ],
+      "id": "3ae2056d-0f21-4adf-9cad-717494a82b66",
+      "name": "Sticky Note28"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ !$json.error && $json.statusCode !== 402 && $json.statusCode !== 401 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c486adfc-afeb-48ac-b654-fbd3b8e4c3f8",
+      "name": "Check Perplexity Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -35520,
+        8368
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ !$json.error && $json.statusCode !== 402 && $json.statusCode !== 401 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "bcf267c8-9b54-4587-ba8e-6d2aaee800e3",
+      "name": "Check Perplexity Cantina Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -37600,
+        7808
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $('Prepare Perplexity Request').item.json.searchQuery.substring(0, 380) }}"
+            },
+            {
+              "name": "search_depth",
+              "value": "advanced"
+            },
+            {
+              "name": "max_results",
+              "value": "5"
+            },
+            {
+              "name": "api_key",
+              "value": "YOUR_TAVILY_API_KEY_HERE"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "398582cb-4273-49dc-9524-9cd15bcbf380",
+      "name": "Call Tavily API (Product Fallback)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -35280,
+        8432
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $('Prepare Perplexity Cantina Request').item.json.searchQuery }}"
+            },
+            {
+              "name": "search_depth",
+              "value": "advanced"
+            },
+            {
+              "name": "max_results",
+              "value": 5
+            },
+            {
+              "name": "api_key",
+              "value": "YOUR_TAVILY_API_KEY_HERE"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "0f13b21a-a113-4be6-8093-221cb2fc8ca7",
+      "name": "Call Tavily API (Cantina Fallback)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -37376,
+        8080
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const tavilyResponse = $json;\nconst results = tavilyResponse.results || [];\nconst content = results.map(r => r.content || '').join('\\n\\n');\nconst vinoData = $('Prepare Perplexity Request').item.json;\nreturn {\n  json: {\n    body: {\n      choices: [{\n        message: {\n          content: content\n        }\n      }]\n    },\n    statusCode: 200,\n    vino: {\n      domain: vinoData.cantina || vinoData.domain,\n      nome_vino: vinoData.nome_vino,\n      anno: vinoData.annata || vinoData.anno,\n      litraggio: vinoData.categoria || vinoData.litraggio,\n      outputFolderId: vinoData.outputFolderId,\n      productFolderId: vinoData.productFolderId\n    }\n  },\n  pairedItem: {\n    item: 0\n  }\n};"
+      },
+      "id": "98bae7a2-9f2d-4492-a7ad-62482d766782",
+      "name": "Normalize Tavily Product Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -35008,
+        8432
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const tavilyResponse = $input.item.json;\nconst results = tavilyResponse.results || [];\n\nconst content = results.map(r => r.content || '').join('\\n\\n');\n\nconst domainData = $('Prepare Perplexity Cantina Request').item.json;\n\nif (!domainData || !domainData.domain) {\n  throw new Error('Domain data not found from Prepare Perplexity Cantina Request');\n}\n\nreturn {\n  json: {\n    body: {\n      choices: [{\n        message: {\n          content: content\n        }\n      }]\n    },\n    statusCode: 200,\n    domain: domainData.domain\n  },\n  pairedItem: {\n    item: 0\n  }\n};"
+      },
+      "id": "fb0ddbde-b808-4381-a0d7-4076ce7c61f8",
+      "name": "Normalize Tavily Cantina Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -37152,
+        8080
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e7cde1ad-a2a9-450e-ac08-2dc50f8a062a",
+      "name": "Merge Product Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -34784,
+        8368
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c17663bb-ff57-4912-acff-5a2e38e676f6",
+      "name": "Merge Cantina Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -36928,
+        7808
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## o esiste \n\n## o la crea",
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -38672,
+        7296
+      ],
+      "id": "2e04f4cd-ec57-4280-862b-7ccc5f2ec9ee",
+      "name": "Sticky Note29"
+    },
+    {
+      "parameters": {
+        "content": "## Fall back Tavily\n",
+        "height": 208,
+        "width": 384,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -37408,
+        7984
+      ],
+      "id": "b528a7c5-9a90-40f2-bd7a-2aad3da16ec9",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "## Fall back Tavily\n",
+        "height": 208,
+        "width": 384,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -35296,
+        8336
+      ],
+      "id": "56d2216c-aab6-4000-a16b-a1e197c34543",
+      "name": "Sticky Note30"
+    },
+    {
+      "parameters": {
+        "content": "## o esiste \n\n## o la crea",
+        "height": 128,
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -39616,
+        7984
+      ],
+      "id": "eabeabab-d31a-4cbb-a709-82c33ae2ebc1",
+      "name": "Sticky Note31"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Find Parent Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Parent Folder": {
+      "main": [
+        [
+          {
+            "node": "Extract Parent Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Parent Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Check Output Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Output Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "IF Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "Use Existing Folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Output Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing Folder": {
+      "main": [
+        [
+          {
+            "node": "Store Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Output Folder": {
+      "main": [
+        [
+          {
+            "node": "Store Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Perplexity Request": {
+      "main": [
+        [
+          {
+            "node": "Call Perplexity API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract File ID": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Estrae primo prodotto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Check ITA Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Product Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "IF Product Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Product Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "Use Existing Product Folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Product Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing Product Folder": {
+      "main": [
+        [
+          {
+            "node": "Store Product Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Product Folder": {
+      "main": [
+        [
+          {
+            "node": "Store Product Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Product Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Extract File ID",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Existing Files",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Domain Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Existing Files": {
+      "main": [
+        [
+          {
+            "node": "Merge Files Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Estrae primo prodotto": {
+      "main": [
+        [
+          {
+            "node": "Merge Files Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Remove Duplicates Domains",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Files Data": {
+      "main": [
+        [
+          {
+            "node": "Filter Existing Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Existing Files": {
+      "main": [
+        [
+          {
+            "node": "Check Empty Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Empty Array": {
+      "main": [
+        [
+          {
+            "node": "Merge Cantina Research",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Prepare Empty Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Prepare Final Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Perplexity Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pulizia+Formattazione Testo": {
+      "main": [
+        [
+          {
+            "node": "Create file from text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create file from text": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Translate Product Description to English",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Final Message": {
+      "main": [
+        [
+          {
+            "node": "Set Product Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Empty Message": {
+      "main": [
+        [
+          {
+            "node": "Set Product Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Combine AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine AI Output": {
+      "main": [
+        [
+          {
+            "node": "Pulizia+Formattazione Testo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent (Domain)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Cantina Research": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates Domains": {
+      "main": [
+        [
+          {
+            "node": "Prepare Perplexity Cantina Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Perplexity Cantina Request": {
+      "main": [
+        [
+          {
+            "node": "Call Perplexity API (Cantina)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Cantina Research": {
+      "main": [
+        [
+          {
+            "node": "Merge Cantina Research",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Domain Files Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Check Domain Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "IF Domain Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Domain Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "Use Existing Domain Folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Domain Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing Domain Folder": {
+      "main": [
+        [
+          {
+            "node": "Store Domain Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Domain Folder": {
+      "main": [
+        [
+          {
+            "node": "Store Domain Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Domain Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Get Existing Domain Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Existing Domain Files": {
+      "main": [
+        [
+          {
+            "node": "Merge Domain Files Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Domain Files Data": {
+      "main": [
+        [
+          {
+            "node": "Filter Existing Domain Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Existing Domain Files": {
+      "main": [
+        [
+          {
+            "node": "Check Empty Array (Domain)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Empty Array (Domain)": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (Domain)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Empty Message (Domain)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches (Domain)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Final Message (Domain)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent (Domain)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent (Domain)": {
+      "main": [
+        [
+          {
+            "node": "Combine Domain AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Domain AI Output": {
+      "main": [
+        [
+          {
+            "node": "Pulizia+Formattazione Testo (Domain)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pulizia+Formattazione Testo (Domain)": {
+      "main": [
+        [
+          {
+            "node": "Create file from text (Domain)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create file from text (Domain)": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (Domain)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Translate Domain Description to English",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Final Message (Domain)": {
+      "main": [
+        [
+          {
+            "node": "Set Domain Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Empty Message (Domain)": {
+      "main": [
+        [
+          {
+            "node": "Set Domain Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Product Summary": {
+      "main": [
+        [
+          {
+            "node": "Merge Summaries",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set Domain Summary": {
+      "main": [
+        [
+          {
+            "node": "Merge Summaries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "messaggio Telegram WF completo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Summaries": {
+      "main": [
+        [
+          {
+            "node": "Compose Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check ITA Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "IF ITA Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ITA Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "Use Existing ITA Folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create ITA Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing ITA Folder": {
+      "main": [
+        [
+          {
+            "node": "Store ITA Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create ITA Folder": {
+      "main": [
+        [
+          {
+            "node": "Store ITA Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store ITA Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Check ENG Folder Exists",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Product Folder Exists",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Domain Folder Exists",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract File ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check ENG Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "IF ENG Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ENG Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "Use Existing ENG Folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create ENG Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing ENG Folder": {
+      "main": [
+        [
+          {
+            "node": "Store ENG Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create ENG Folder": {
+      "main": [
+        [
+          {
+            "node": "Store ENG Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store ENG Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Check ENG Product Folder Exists",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check ENG Domain Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check ENG Product Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "IF ENG Product Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ENG Product Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "Use Existing ENG Product Folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create ENG Product Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing ENG Product Folder": {
+      "main": [
+        [
+          {
+            "node": "Store ENG Product Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create ENG Product Folder": {
+      "main": [
+        [
+          {
+            "node": "Store ENG Product Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check ENG Domain Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "IF ENG Domain Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ENG Domain Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "Use Existing ENG Domain Folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create ENG Domain Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing ENG Domain Folder": {
+      "main": [
+        [
+          {
+            "node": "Store ENG Domain Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create ENG Domain Folder": {
+      "main": [
+        [
+          {
+            "node": "Store ENG Domain Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate Product Description to English": {
+      "main": [
+        [
+          {
+            "node": "Prepare English Product File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare English Product File": {
+      "main": [
+        [
+          {
+            "node": "Create English Product File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate Domain Description to English": {
+      "main": [
+        [
+          {
+            "node": "Prepare English Domain File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare English Domain File": {
+      "main": [
+        [
+          {
+            "node": "Create English Domain File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create English Product File": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create English Domain File": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (Domain)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Perplexity API": {
+      "main": [
+        [
+          {
+            "node": "Check Perplexity Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Perplexity Status": {
+      "main": [
+        [
+          {
+            "node": "Merge Product Results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Tavily API (Product Fallback)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Tavily API (Product Fallback)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Tavily Product Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Tavily Product Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Product Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Product Results": {
+      "main": [
+        [
+          {
+            "node": "Combine Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Perplexity API (Cantina)": {
+      "main": [
+        [
+          {
+            "node": "Check Perplexity Cantina Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Perplexity Cantina Status": {
+      "main": [
+        [
+          {
+            "node": "Merge Cantina Results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Tavily API (Cantina Fallback)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Tavily API (Cantina Fallback)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Tavily Cantina Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Tavily Cantina Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Cantina Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Cantina Results": {
+      "main": [
+        [
+          {
+            "node": "Extract Cantina Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "a091e8d2-f8ce-4f3a-ac5a-2e1e54fcd14a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2e1f0fbbf5c598b9fe4f5510781b43b1aa2ea6c1eccfea3fcbdaea2df97a7bd"
+  },
+  "id": "pzfpHQ9LMAqVWwlo",
+  "tags": []
+}
